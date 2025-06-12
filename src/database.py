@@ -141,5 +141,101 @@ class SecureDB:
         else:
             return None
 
+    def add_incident(self, название, дата_обнаружения=None, статус_id=None, организация_id=None, ответственный_id=None):
+        with self.conn:
+            self.conn.execute(
+                "INSERT INTO Инциденты (название, дата_обнаружения, статус_инцидента_id, организация_id, ответственный_id) VALUES (?, ?, ?, ?, ?)",
+                (название, дата_обнаружения, статус_id, организация_id, ответственный_id)
+            )
+
+    def get_incidents(self):
+        cursor = self.conn.execute(
+            "SELECT инцидент_id, название, дата_обнаружения, статус_инцидента_id, организация_id, ответственный_id FROM Инциденты"
+        )
+        return cursor.fetchall()
+
+    def update_incident_status(self, инцидент_id, новый_статус_id):
+        with self.conn:
+            self.conn.execute(
+                "UPDATE Инциденты SET статус_инцидента_id = ? WHERE инцидент_id = ?",
+                (новый_статус_id, инцидент_id)
+            )
+
+    def delete_incident(self, инцидент_id):
+        with self.conn:
+            self.conn.execute(
+                "DELETE FROM Инциденты WHERE инцидент_id = ?",
+                (инцидент_id,)
+            )
+
+    # --- Методы для Организаций ---
+    def add_organization(self, название, адрес=None, телефон=None):
+        with self.conn:
+            self.conn.execute(
+                "INSERT INTO Организации (название, адрес, контактный_телефон) VALUES (?, ?, ?)",
+                (название, адрес, телефон)
+            )
+
+    def get_organizations(self):
+        cursor = self.conn.execute(
+            "SELECT организация_id, название, адрес, контактный_телефон FROM Организации"
+        )
+        return cursor.fetchall()
+
+    # --- Методы для Ответственных ---
+    def add_responsible(self, имя, должность=None, email=None, организация_id=None):
+        with self.conn:
+            self.conn.execute(
+                "INSERT INTO Ответственные (имя, должность, электронная_почта, организация_id) VALUES (?, ?, ?, ?)",
+                (имя, должность, email, организация_id)
+            )
+
+    def get_responsibles(self):
+        cursor = self.conn.execute(
+            "SELECT ответственный_id, имя, должность, электронная_почта, организация_id FROM Ответственные"
+        )
+        return cursor.fetchall()
+
+    # --- Методы для Статусов Инцидентов ---
+    def get_statuses(self):
+        cursor = self.conn.execute(
+            "SELECT статус_инцидента_id, статус FROM СтатусыИнцидентов"
+        )
+        return cursor.fetchall()
+
+    # --- Методы для Мер Реагирования ---
+    def add_response_measure(self, описание):
+        with self.conn:
+            self.conn.execute(
+                "INSERT INTO МерыРеагирования (описание) VALUES (?)",
+                (описание,)
+            )
+
+    def get_response_measures(self):
+        cursor = self.conn.execute(
+            "SELECT мера_реагирования_id, описание FROM МерыРеагирования"
+        )
+        return cursor.fetchall()
+
+    # --- Методы для связей между инцидентами и мерами реагирования ---
+    def link_incident_measure(self, инцидент_id, мера_реагирования_id):
+        with self.conn:
+            self.conn.execute(
+                "INSERT OR IGNORE INTO Инцидент_Меры (инцидент_id, мера_реагирования_id) VALUES (?, ?)",
+                (инцидент_id, мера_реагирования_id)
+            )
+
+    def get_measures_for_incident(self, инцидент_id):
+        cursor = self.conn.execute(
+            """
+            SELECT м.мера_реагирования_id, м.описание
+            FROM МерыРеагирования м
+            JOIN Инцидент_Меры им ON м.мера_реагирования_id = им.мера_реагирования_id
+            WHERE им.инцидент_id = ?
+            """,
+            (инцидент_id,)
+        )
+        return cursor.fetchall()
+
     def close(self):
         self.conn.close()
