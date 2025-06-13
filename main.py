@@ -34,14 +34,22 @@ def start_main_app(user_info):
 
     root.mainloop()
 
+def center_window(window, width, height):
+    window.update_idletasks()
+    screen_width = window.winfo_screenwidth()
+    screen_height = window.winfo_screenheight()
+    x = (screen_width // 2) - (width // 2)
+    y = (screen_height // 2) - (height // 2)
+    window.geometry(f"{width}x{height}+{x}+{y}")
+
 if __name__ == "__main__":
     ensure_data_dir()
     configure_logging()
     db = SecureDB("data/incidents.db")
 
-    # Сначала окно авторизации
+    # Окно авторизации
     auth_root = ctk.CTk()
-    auth_root.geometry("300x200+200+200")
+    center_window(auth_root, 300, 200)
     auth_root.title("Авторизация")
 
     def on_auth_success(user_info):
