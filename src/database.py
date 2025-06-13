@@ -148,6 +148,24 @@ class SecureDB:
         else:
             return None
 
+    def get_all_users(self):
+        cursor = self.conn.execute("SELECT username, role FROM users")
+        return [{"username": row[0], "role": row[1]} for row in cursor.fetchall()]
+
+    def delete_user(self, username: str):
+        with self.conn:
+            self.conn.execute("DELETE FROM users WHERE username = ?", (username,))
+
+    def change_user_role(self, username: str, new_role: str):
+        with self.conn:
+            self.conn.execute("UPDATE users SET role = ? WHERE username = ?", (new_role, username))
+
+    def change_user_password(self, username: str, new_password: str):
+        new_hash = self.crypto.hash_password(new_password)
+        with self.conn:
+            self.conn.execute("UPDATE users SET password_hash = ? WHERE username = ?", (new_hash, username))
+
+
     def add_incident(self, название, дата_обнаружения=None, статус_id=None, организация_id=None, ответственный_id=None):
         with self.conn:
             self.conn.execute(

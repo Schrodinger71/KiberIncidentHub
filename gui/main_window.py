@@ -84,7 +84,7 @@ class MainWindow(ctk.CTkFrame):
         if self.user_info['role'] != 'admin':
             messagebox.showwarning("Доступ запрещен", "Требуются права администратора")
             return
-        UserManagerDialog(self, self.db)
+        UserManagerDialog(self, self.db, self.user_info)
 
     def logout(self):
         if self.incident_window and self.incident_window.winfo_exists():
