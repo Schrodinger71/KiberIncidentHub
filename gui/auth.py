@@ -22,7 +22,7 @@ class AuthDialog(ctk.CTkFrame):
         self.login_btn = ctk.CTkButton(self, text="Войти", command=self._login)
         self.login_btn.pack(pady=10)
 
-        self.username_entry.focus()  # курсор сразу в поле логина
+        self.username_entry.focus()
 
     def _login(self):
         username = self.username_entry.get()

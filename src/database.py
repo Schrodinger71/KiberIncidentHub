@@ -174,6 +174,42 @@ class SecureDB:
                 "DELETE FROM Инциденты WHERE инцидент_id = ?",
                 (инцидент_id,)
             )
+            
+    def get_incident_details(self, incident_id):
+        """Возвращает полные данные об инциденте в виде словаря"""
+        cursor = self.conn.execute(
+            "SELECT * FROM Инциденты WHERE инцидент_id = ?", 
+            (incident_id,)
+        )
+        columns = [col[0] for col in cursor.description]
+        row = cursor.fetchone()
+        return dict(zip(columns, row)) if row else None
+
+    def update_incident(self, id, **fields):
+        """Обновляет указанные поля инцидента с правильными именами столбцов"""
+        # Соответствие между именами параметров и столбцами БД
+        column_mapping = {
+            'статус_id': 'статус_инцидента_id',
+            'название': 'название',
+            'организация_id': 'организация_id',
+            'ответственный_id': 'ответственный_id'
+        }
+        
+        # Преобразуем имена полей к реальным именам столбцов
+        db_fields = {}
+        for key, value in fields.items():
+            db_key = column_mapping.get(key, key)
+            db_fields[db_key] = value
+        
+        with self.conn:
+            set_clause = ", ".join(f"{k} = ?" for k in db_fields)
+            values = list(db_fields.values())
+            values.append(id)
+            
+            self.conn.execute(
+                f"UPDATE Инциденты SET {set_clause} WHERE инцидент_id = ?",
+                values
+            )
 
     # --- Методы для Организаций ---
     def add_organization(self, название, адрес=None, телефон=None):

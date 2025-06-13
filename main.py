@@ -13,53 +13,52 @@ from src.logger import configure_logging
 def ensure_data_dir():
     Path("data").mkdir(exist_ok=True)
 
-def start_main_app(user_info):
-    logging.info(f"Вошёл: {user_info['username']} с ролью {user_info['role']}")
 
-    root = ctk.CTk()
-    root.geometry("800x600+100+100")
-    root.title(f"Инциденты (пользователь: {user_info['username']})")
+class App(ctk.CTk):
+    def __init__(self):
+        super().__init__()
+        self.title("Инциденты")
+        self.geometry("800x600+700+300")
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
 
-    def on_close():
-        logging.info("Главное окно закрыто, завершаем программу.")
-        root.update_idletasks()
-        root.destroy()
+        ensure_data_dir()
+        configure_logging()
+        self.db = SecureDB("data/incidents.db")
+
+        self.current_frame = None
+        self.show_auth()
+
+    def show_auth(self):
+        self.clear_frame()
+        self.geometry("300x200+700+300")
+        self.title("Авторизация")
+
+        def on_success(user_info):
+            logging.info(f"Авторизация успешна: {user_info['username']}")
+            self.show_main(user_info)
+
+        self.current_frame = AuthDialog(self, self.db, on_success)
+        self.current_frame.pack(fill="both", expand=True)
+
+    def show_main(self, user_info):
+        self.clear_frame()
+        self.geometry("800x600+700+300")
+        self.title(f"Инциденты (пользователь: {user_info['username']})")
+
+        self.current_frame = MainWindow(self, self.db, user_info, self.show_auth)
+        self.current_frame.pack(fill="both", expand=True)
+
+    def clear_frame(self):
+        if self.current_frame:
+            self.current_frame.destroy()
+            self.current_frame = None
+
+    def on_close(self):
+        logging.info("Приложение закрывается.")
+        self.destroy()
         sys.exit()
 
-    root.protocol("WM_DELETE_WINDOW", on_close)
-
-    try:
-        app = MainWindow(root, db, user_info)
-        app.pack(fill="both", expand=True)
-        logging.debug("MainWindow успешно инициализирован")
-    except Exception:
-        logging.exception("Ошибка при инициализации MainWindow")
-
-    root.mainloop()
-
-def center_window(window, width, height):
-    window.update_idletasks()
-    screen_width = window.winfo_screenwidth()
-    screen_height = window.winfo_screenheight()
-    x = (screen_width // 2) - (width // 2)
-    y = (screen_height // 2) - (height // 2)
-    window.geometry(f"{width}x{height}+{x+100}+{y+100}")
 
 if __name__ == "__main__":
-    ensure_data_dir()
-    configure_logging()
-    db = SecureDB("data/incidents.db")
-
-    # Окно авторизации
-    auth_root = ctk.CTk()
-    center_window(auth_root, 300, 200)
-    auth_root.title("Авторизация")
-
-    def on_auth_success(user_info):
-        logging.info("Авторизация прошла успешно, закрываем окно авторизации.")
-        auth_root.withdraw()
-        start_main_app(user_info)
-
-    auth_dialog = AuthDialog(auth_root, db, on_auth_success)
-    auth_dialog.pack(fill="both", expand=True)
-    auth_root.mainloop()
+    app = App()
+    app.mainloop()

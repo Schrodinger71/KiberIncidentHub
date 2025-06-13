@@ -1,7 +1,9 @@
 import logging
 import sys
 from logging.handlers import RotatingFileHandler
+
 from cryptography.hazmat.primitives import hashes, hmac
+
 from config.secrets import LOG_HMAC_KEY
 
 

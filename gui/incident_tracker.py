@@ -1,5 +1,7 @@
 from tkinter import messagebox
+
 import customtkinter as ctk
+
 from src.database import SecureDB
 
 
@@ -8,15 +10,32 @@ class IncidentTracker(ctk.CTkFrame):
         super().__init__(master)
         self.db = db
         self.user = user_info
-        master.title(f"Инциденты (пользователь: {self.user['username']})")
+        master.title(f"Инциденты (пользователь: {self.user['username']} | Роль: {self.user['role']}")
         self.selected_incident_id = None
         self._setup_ui()
         self._load_reference_data()
         self._load_incidents()
+        self._update_ui_permissions()  # Обновляем UI в зависимости от роли
+
+    def _update_ui_permissions(self):
+        """Обновляет доступные действия в зависимости от роли пользователя"""
+        is_admin = self.user['role'] == 'admin'
+        
+        # Разрешаем редактирование/удаление только админам
+        self.edit_button.configure(state="normal" if is_admin else "disabled")
+        self.delete_button.configure(state="normal" if is_admin else "disabled")
+        
+        # Для обычных пользователей делаем поля только для чтения
+        readonly_state = "normal" if is_admin else "disabled"
+        self.entry_name.configure(state=readonly_state)
+        self.status_combo.configure(state=readonly_state)
+        self.org_combo.configure(state=readonly_state)
+        self.resp_combo.configure(state=readonly_state)
 
     def _setup_ui(self):
         self.grid_columnconfigure((0, 1, 2, 3, 4, 5), weight=1)
 
+        # Поля ввода
         self.entry_name = ctk.CTkEntry(self, placeholder_text="Название инцидента")
         self.entry_name.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
 
@@ -32,6 +51,7 @@ class IncidentTracker(ctk.CTkFrame):
         self.resp_combo = ctk.CTkComboBox(self, variable=self.resp_var)
         self.resp_combo.grid(row=0, column=3, padx=5, pady=5)
 
+        # Кнопки действий
         self.add_button = ctk.CTkButton(self, text="Добавить", command=self._add_incident)
         self.add_button.grid(row=0, column=4, padx=5, pady=5)
 
@@ -41,6 +61,7 @@ class IncidentTracker(ctk.CTkFrame):
         self.delete_button = ctk.CTkButton(self, text="Удалить", fg_color="red", command=self._delete_incident)
         self.delete_button.grid(row=1, column=5, padx=5, pady=5)
 
+        # Поиск
         self.search_entry = ctk.CTkEntry(self, placeholder_text="Поиск по названию")
         self.search_entry.grid(row=1, column=0, columnspan=2, padx=5, pady=5, sticky="ew")
 
@@ -50,6 +71,7 @@ class IncidentTracker(ctk.CTkFrame):
         self.reset_button = ctk.CTkButton(self, text="Сброс", command=self._load_incidents)
         self.reset_button.grid(row=1, column=3, padx=5, pady=5)
 
+        # Список инцидентов
         self.incident_listbox = ctk.CTkScrollableFrame(self, width=700, height=300)
         self.incident_listbox.grid(row=2, column=0, columnspan=6, padx=10, pady=10, sticky="nsew")
 
@@ -128,9 +150,42 @@ class IncidentTracker(ctk.CTkFrame):
         org_id = next((o[0] for o in self.organizations if o[1] == self.org_var.get()), None)
         resp_id = next((r[0] for r in self.responsibles if r[1] == self.resp_var.get()), None)
 
-        self.db.update_incident(id=self.selected_incident_id, название=name, статус_id=status_id, организация_id=org_id, ответственный_id=resp_id)
-        messagebox.showinfo("Готово", "Инцидент обновлён")
-        self._load_incidents()
+        try:
+            # Получаем текущие данные для логгирования
+            old_data = self.db.get_incident_details(self.selected_incident_id)
+            
+            # Обновляем инцидент с правильными именами полей
+            self.db.update_incident(
+                id=self.selected_incident_id,
+                название=name,
+                статус_инцидента_id=status_id,  # Исправленное имя поля
+                организация_id=org_id,
+                ответственный_id=resp_id
+            )
+
+            # Логгируем изменения
+            changes = []
+            if old_data['название'] != name:
+                changes.append(f"название: {old_data['название']} → {name}")
+            if old_data['статус_инцидента_id'] != status_id:
+                old_status = next((s[1] for s in self.statuses if s[0] == old_data['статус_инцидента_id']), "Неизвестно")
+                new_status = next((s[1] for s in self.statuses if s[0] == status_id), "Неизвестно")
+                changes.append(f"статус: {old_status} → {new_status}")
+            
+            if changes:
+                self.db.log_change(
+                    username=self.user['username'],
+                    таблица="Инциденты",
+                    действие="Редактирование",
+                    поле=None,
+                    старое_значение=str(old_data),
+                    новое_значение=f"{{'название': '{name}', 'статус_инцидента_id': {status_id}, 'организация_id': {org_id}, 'ответственный_id': {resp_id}}}"
+                )
+
+            messagebox.showinfo("Готово", "Инцидент обновлён")
+            self._load_incidents()
+        except Exception as e:
+            messagebox.showerror("Ошибка", f"Не удалось обновить инцидент: {str(e)}")
 
     def _delete_incident(self):
         if not self.selected_incident_id:
