@@ -1,6 +1,7 @@
 import customtkinter as ctk
-
+from tkinter import messagebox
 from gui.incident_tracker import IncidentTracker
+from gui.user_manager_window import UserManagerDialog
 
 
 class MainWindow(ctk.CTkFrame):
@@ -35,6 +36,17 @@ class MainWindow(ctk.CTkFrame):
         )
         self.incident_btn.pack(pady=20, padx=20)
 
+        self.user_btn = ctk.CTkButton(
+            self,
+            text="Управление пользователями",
+            command=self._open_user_manager,
+            fg_color=self.button_color,
+            hover_color=self.button_hover_color,
+            text_color="white",
+            state="normal" if self.user_info['role'] == 'admin' else "disabled"
+        )
+        self.user_btn.pack(pady=20, padx=20)
+
         self.logout_btn = ctk.CTkButton(
             self,
             text="Выйти",
@@ -66,6 +78,13 @@ class MainWindow(ctk.CTkFrame):
             tracker.pack(fill="both", expand=True)
         else:
             self.incident_window.lift()
+
+    def _open_user_manager(self):
+        """Открывает окно управления пользователями"""
+        if self.user_info['role'] != 'admin':
+            messagebox.showwarning("Доступ запрещен", "Требуются права администратора")
+            return
+        UserManagerDialog(self, self.db)
 
     def logout(self):
         if self.incident_window and self.incident_window.winfo_exists():
