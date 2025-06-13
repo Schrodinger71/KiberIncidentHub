@@ -107,6 +107,10 @@ class IncidentTracker(ctk.CTkFrame):
             label.pack(fill="x", pady=2, padx=2)
             self.incident_widgets.append(label)
 
+        if not incidents:
+            ctk.CTkLabel(self.incident_listbox, text="Нет инцидентов").pack(pady=5)
+            return
+
     def _clear_listbox(self):
         for widget in self.incident_listbox.winfo_children():
             widget.destroy()
@@ -136,6 +140,14 @@ class IncidentTracker(ctk.CTkFrame):
         self.org_var.set(next((o[1] for o in self.organizations if o[0] == org_id), ""))
         self.resp_var.set(next((r[1] for r in self.responsibles if r[0] == resp_id), ""))
 
+        # Подсветка
+        for widget in self.incident_widgets:
+            widget.configure(fg_color="transparent")
+        selected_widget = next((w for w in self.incident_widgets if f"ID:{incident_data[0]}" in w.cget("text")), None)
+        if selected_widget:
+            selected_widget.configure(fg_color="#333333")
+
+
     def _edit_incident(self):
         if not self.selected_incident_id:
             messagebox.showwarning("Выбор", "Выберите инцидент для редактирования")
@@ -151,39 +163,54 @@ class IncidentTracker(ctk.CTkFrame):
         resp_id = next((r[0] for r in self.responsibles if r[1] == self.resp_var.get()), None)
 
         try:
-            # Получаем текущие данные для логгирования
             old_data = self.db.get_incident_details(self.selected_incident_id)
-            
-            # Обновляем инцидент с правильными именами полей
+
             self.db.update_incident(
                 id=self.selected_incident_id,
                 название=name,
-                статус_инцидента_id=status_id,  # Исправленное имя поля
+                статус_инцидента_id=status_id,
                 организация_id=org_id,
                 ответственный_id=resp_id
             )
 
-            # Логгируем изменения
             changes = []
-            if old_data['название'] != name:
-                changes.append(f"название: {old_data['название']} → {name}")
-            if old_data['статус_инцидента_id'] != status_id:
-                old_status = next((s[1] for s in self.statuses if s[0] == old_data['статус_инцидента_id']), "Неизвестно")
+
+            if old_data.get('название') != name:
+                changes.append(f"название: {old_data.get('название')} → {name}")
+
+            if old_data.get('статус_инцидента_id') != status_id:
+                old_status = next((s[1] for s in self.statuses if s[0] == old_data.get('статус_инцидента_id')), "Неизвестно")
                 new_status = next((s[1] for s in self.statuses if s[0] == status_id), "Неизвестно")
                 changes.append(f"статус: {old_status} → {new_status}")
-            
+
+            if old_data.get('организация_id') != org_id:
+                old_org = next((o[1] for o in self.organizations if o[0] == old_data.get('организация_id')), "Неизвестно")
+                new_org = next((o[1] for o in self.organizations if o[0] == org_id), "Неизвестно")
+                changes.append(f"организация: {old_org} → {new_org}")
+
+            if old_data.get('ответственный_id') != resp_id:
+                old_resp = next((r[1] for r in self.responsibles if r[0] == old_data.get('ответственный_id')), "Неизвестно")
+                new_resp = next((r[1] for r in self.responsibles if r[0] == resp_id), "Неизвестно")
+                changes.append(f"ответственный: {old_resp} → {new_resp}")
+
             if changes:
                 self.db.log_change(
                     username=self.user['username'],
                     таблица="Инциденты",
                     действие="Редактирование",
-                    поле=None,
+                    поле="; ".join(changes),
                     старое_значение=str(old_data),
-                    новое_значение=f"{{'название': '{name}', 'статус_инцидента_id': {status_id}, 'организация_id': {org_id}, 'ответственный_id': {resp_id}}}"
+                    новое_значение=str({
+                        'название': name,
+                        'статус_инцидента_id': status_id,
+                        'организация_id': org_id,
+                        'ответственный_id': resp_id
+                    })
                 )
 
             messagebox.showinfo("Готово", "Инцидент обновлён")
             self._load_incidents()
+
         except Exception as e:
             messagebox.showerror("Ошибка", f"Не удалось обновить инцидент: {str(e)}")
 

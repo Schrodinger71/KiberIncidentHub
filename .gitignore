@@ -1,4 +1,6 @@
+# My custom
 secrets.py
+data/incidents.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

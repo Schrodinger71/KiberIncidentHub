@@ -120,6 +120,19 @@ class SecureDB:
                 "INSERT OR IGNORE INTO Организации VALUES (?, ?, ?, ?)",
                 (1, 'ГосСОПКА', 'Москва, ул. Кибербезопасности, 1', '+79990001122')
             )
+            
+            # Проверка: есть ли пользователи
+            cur = self.conn.execute("SELECT COUNT(*) FROM users")
+            count = cur.fetchone()[0]
+
+            if count == 0:
+                # Если нет ни одного пользователя — создаём админа
+                admin_pass = self.crypto.hash_password("adminpass")
+                self.conn.execute(
+                    "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
+                    ("admin", admin_pass, "admin")
+                )
+                logging.info("Таблица пользователей полностью пуста. Создан новый пользователь имя:пароль -> admin:adminpass")
 
     def add_user(self, username: str, password: str, role: str = 'user'):
         """Добавляет пользователя с хэшированным паролем"""
