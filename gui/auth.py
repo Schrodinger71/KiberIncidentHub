@@ -1,6 +1,8 @@
 import logging
-import customtkinter as ctk
 from tkinter import messagebox
+
+import customtkinter as ctk
+
 
 class AuthDialog(ctk.CTkFrame):
     def __init__(self, master, db, on_success):

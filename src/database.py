@@ -1,7 +1,10 @@
-import sqlite3
-from pathlib import Path
-from src.crypto import CryptoManager
 import logging
+import sqlite3
+from datetime import datetime
+from pathlib import Path
+
+from src.crypto import CryptoManager
+
 
 class SecureDB:
     def __init__(self, db_path: str):
@@ -70,12 +73,16 @@ class SecureDB:
                     FOREIGN KEY (инцидент_id) REFERENCES Инциденты(инцидент_id) 
                 );
                 
-                CREATE TABLE IF NOT EXISTS ИсторияИзменений ( 
-                    история_изменения_id INTEGER PRIMARY KEY, 
-                    инцидент_id INTEGER, 
-                    дата_изменения DATE, 
-                    описание TEXT, 
-                    FOREIGN KEY (инцидент_id) REFERENCES Инциденты(инцидент_id) 
+                CREATE TABLE IF NOT EXISTS ИсторияИзменений (
+                    история_изменения_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT NOT NULL,
+                    таблица TEXT NOT NULL,
+                    действие TEXT NOT NULL,
+                    поле TEXT,
+                    старое_значение TEXT,
+                    новое_значение TEXT,
+                    дата_изменения TEXT DEFAULT CURRENT_TIMESTAMP,
+                    FOREIGN KEY (username) REFERENCES users(username)
                 );
                 
                 CREATE TABLE IF NOT EXISTS Инцидент_Меры (
@@ -111,7 +118,7 @@ class SecureDB:
 
             self.conn.execute(
                 "INSERT OR IGNORE INTO Организации VALUES (?, ?, ?, ?)",
-                (1, 'ГосСОПКА', 'Москва', '+79990001122')
+                (1, 'ГосСОПКА', 'Москва, ул. Кибербезопасности, 1', '+79990001122')
             )
 
     def add_user(self, username: str, password: str, role: str = 'user'):
@@ -236,6 +243,24 @@ class SecureDB:
             (инцидент_id,)
         )
         return cursor.fetchall()
+
+    def log_change(self, username, таблица, действие, поле=None, старое_значение=None, новое_значение=None):
+        """Логирует изменения в системе"""
+        try:
+            self.conn.execute(
+                """
+                INSERT INTO ИсторияИзменений (
+                    username, таблица, действие, поле, 
+                    старое_значение, новое_значение
+                ) VALUES (?, ?, ?, ?, ?, ?)
+                """,
+                (username, таблица, действие, поле, старое_значение, новое_значение)
+            )
+            self.conn.commit()
+            logging.info(f"Запись в журнал изменений {действие}")
+        except sqlite3.Error as e:
+            logging.error(f"Ошибка при логировании: {e}")
+            raise
 
     def close(self):
         self.conn.close()

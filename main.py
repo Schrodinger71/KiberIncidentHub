@@ -1,18 +1,21 @@
-import sys
 import logging
-import customtkinter as ctk
+import sys
 from pathlib import Path
+
+import customtkinter as ctk
+
+from gui.auth import AuthDialog
+from gui.main_window import MainWindow
 from src.database import SecureDB
 from src.logger import configure_logging
-from gui.auth import AuthDialog
-from gui.main_window import IncidentTracker
+
 
 def ensure_data_dir():
     Path("data").mkdir(exist_ok=True)
 
 def start_main_app(user_info):
     logging.info(f"Вошёл: {user_info['username']} с ролью {user_info['role']}")
-    
+
     root = ctk.CTk()
     root.geometry("800x600+100+100")
     root.title(f"Инциденты (пользователь: {user_info['username']})")
@@ -26,11 +29,11 @@ def start_main_app(user_info):
     root.protocol("WM_DELETE_WINDOW", on_close)
 
     try:
-        app = IncidentTracker(root, db, user_info)
+        app = MainWindow(root, db, user_info)
         app.pack(fill="both", expand=True)
-        logging.debug("IncidentTracker успешно инициализирован")
+        logging.debug("MainWindow успешно инициализирован")
     except Exception:
-        logging.exception("Ошибка при инициализации IncidentTracker")
+        logging.exception("Ошибка при инициализации MainWindow")
 
     root.mainloop()
 
@@ -40,7 +43,7 @@ def center_window(window, width, height):
     screen_height = window.winfo_screenheight()
     x = (screen_width // 2) - (width // 2)
     y = (screen_height // 2) - (height // 2)
-    window.geometry(f"{width}x{height}+{x}+{y}")
+    window.geometry(f"{width}x{height}+{x+100}+{y+100}")
 
 if __name__ == "__main__":
     ensure_data_dir()

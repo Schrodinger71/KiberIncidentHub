@@ -1,8 +1,11 @@
 import logging
-from logging.handlers import RotatingFileHandler
-from cryptography.hazmat.primitives import hashes, hmac
-from config.secrets import LOG_HMAC_KEY
 import sys
+from logging.handlers import RotatingFileHandler
+
+from cryptography.hazmat.primitives import hashes, hmac
+
+from config.secrets import LOG_HMAC_KEY
+
 
 class HMACLogFilter(logging.Filter):
     """Добавляет HMAC к лог-сообщениям"""

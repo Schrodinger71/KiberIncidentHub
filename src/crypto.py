@@ -1,6 +1,8 @@
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes, hmac
+
 from config.secrets import DB_ENCRYPTION_KEY, PASSWORD_HMAC_KEY
+
 
 class CryptoManager:
     def __init__(self):
