@@ -1,3 +1,6 @@
+# Copyright 2025 Schrodinger71
+# Licensed under the Apache License, Version 2.0 (see LICENSE file)
+
 import logging
 import sys
 from pathlib import Path

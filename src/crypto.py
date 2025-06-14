@@ -1,3 +1,6 @@
+# Copyright 2025 Schrodinger71
+# Licensed under the Apache License, Version 2.0 (see LICENSE file)
+
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes, hmac
 
