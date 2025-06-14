@@ -24,6 +24,8 @@ class AuthDialog(ctk.CTkFrame):
 
         self.username_entry.focus()
 
+        master.resizable(False, False)
+
     def _login(self):
         username = self.username_entry.get()
         password = self.password_entry.get()

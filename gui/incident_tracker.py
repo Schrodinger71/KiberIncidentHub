@@ -10,7 +10,7 @@ class IncidentTracker(ctk.CTkFrame):
         super().__init__(master)
         self.db = db
         self.user = user_info
-        master.title(f"Инциденты (пользователь: {self.user['username']} | Роль: {self.user['role']}")
+        # master.title(f"Инциденты (пользователь: {self.user['username']} | Роль: {self.user['role']}")
         self.selected_incident_id = None
         self._setup_ui()
         self._load_reference_data()

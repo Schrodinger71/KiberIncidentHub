@@ -5,84 +5,88 @@ from tkinter import messagebox, ttk
 import customtkinter as ctk
 
 
-class UserManagerDialog(ctk.CTkToplevel):
+class UserManagerDialogEmbed(ctk.CTkFrame):
     def __init__(self, master, db, user_info):
         super().__init__(master)
         self.db = db
-        self.title("Управление пользователями")
-        self.geometry("700x650")
+        self.user_info = user_info
         self._setup_ui()
         self._load_users()
-        self.user_info = user_info
 
     def _setup_ui(self):
-        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure((0, 1, 2, 3, 4, 5), weight=1)
 
-        # ====== Фрейм создания пользователя ======
-        form_frame = ctk.CTkFrame(self)
-        form_frame.grid(row=0, column=0, padx=20, pady=10, sticky="ew")
-        form_frame.grid_columnconfigure(0, weight=1)
+        # ====== Форма создания пользователя ======
+        self.username_entry = ctk.CTkEntry(self, placeholder_text="Логин")
+        self.username_entry.grid(row=0, column=0, padx=5, pady=5, sticky="ew")
 
-        ctk.CTkLabel(form_frame, text="Создать нового пользователя", font=ctk.CTkFont(size=16, weight="bold")).grid(row=0, column=0, pady=(10, 5))
-
-        self.username_entry = ctk.CTkEntry(form_frame, placeholder_text="Логин")
-        self.username_entry.grid(row=1, column=0, padx=10, pady=5, sticky="ew")
-
-        self.password_entry = ctk.CTkEntry(form_frame, placeholder_text="Пароль", show="*")
-        self.password_entry.grid(row=2, column=0, padx=10, pady=5, sticky="ew")
+        self.password_entry = ctk.CTkEntry(self, placeholder_text="Пароль", show="*")
+        self.password_entry.grid(row=0, column=1, padx=5, pady=5, sticky="ew")
 
         self.role_var = ctk.StringVar(value="user")
-        roles_frame = ctk.CTkFrame(form_frame, fg_color="transparent")
-        roles_frame.grid(row=3, column=0, pady=5, sticky="w", padx=10)
-        ctk.CTkRadioButton(roles_frame, text="Обычный пользователь", variable=self.role_var, value="user").pack(side="left", padx=(0, 10))
-        ctk.CTkRadioButton(roles_frame, text="Администратор", variable=self.role_var, value="admin").pack(side="left")
+        self.role_combo = ctk.CTkComboBox(self, variable=self.role_var, values=["user", "admin"])
+        self.role_combo.grid(row=0, column=2, padx=5, pady=5, sticky="ew")
 
-        self.create_btn = ctk.CTkButton(form_frame, text="Создать", command=self._create_user)
-        self.create_btn.grid(row=4, column=0, pady=10, padx=10, sticky="ew")
+        self.create_btn = ctk.CTkButton(self, text="Создать", command=self._create_user)
+        self.create_btn.grid(row=0, column=3, padx=5, pady=5)
 
-        # ====== Разделитель ======
-        ctk.CTkLabel(self, text="Список пользователей\n(двойной клик для редактирования)", font=ctk.CTkFont(size=16, weight="bold")).grid(row=1, column=0, pady=(10, 5))
+        self.refresh_btn = ctk.CTkButton(self, text="Обновить", command=self._load_users)
+        self.refresh_btn.grid(row=0, column=4, padx=5, pady=5)
+
+        # ====== Заголовок ======
+        ctk.CTkLabel(self, text="Пользователи (двойной клик — редактирование)",
+                     font=ctk.CTkFont(size=16, weight="bold")).grid(
+            row=1, column=0, columnspan=6, padx=10, pady=(5, 5))
 
         # ====== Таблица пользователей ======
-        table_frame = ctk.CTkFrame(self)
-        table_frame.grid(row=2, column=0, padx=20, pady=5, sticky="nsew")
-        table_frame.grid_columnconfigure(0, weight=1)
-        table_frame.grid_rowconfigure(0, weight=1)
+        self.table_frame = ctk.CTkFrame(self)
+        self.table_frame.grid(row=2, column=0, columnspan=6, padx=10, pady=10, sticky="nsew")
+        self.table_frame.grid_columnconfigure(0, weight=1)
+        self.table_frame.grid_rowconfigure(0, weight=1)
 
+        # Treeview
+        self.tree = ttk.Treeview(self.table_frame, columns=("username", "role"), show="headings")
+        self.tree.heading("username", text="Логин")
+        self.tree.heading("role", text="Роль")
+        self.tree.grid(row=0, column=0, sticky="nsew")
 
+        scrollbar = ttk.Scrollbar(self.table_frame, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscrollcommand=scrollbar.set)
+        scrollbar.grid(row=0, column=1, sticky="ns")
+
+        # ====== Стили Treeview ======
+        tree_font = tkfont.nametofont("TkDefaultFont").copy()
+        tree_font.configure(size=14, family="Segoe UI")
 
         style = ttk.Style()
         style.theme_use("clam")
-
-        tree_font = tkfont.Font(family="Segoe UI", size=12)
-
         style.configure("Treeview",
                         font=tree_font,
-                        background="#2b2b2b",     # Тёмный фон строк
-                        foreground="white",        # Белый текст
-                        fieldbackground="#2b2b2b", # Тёмный фон для пустых областей
                         rowheight=36,
+                        background="#2b2b2b",
+                        foreground="white",
+                        fieldbackground="#2b2b2b",
                         bordercolor="#2b2b2b",
                         borderwidth=0)
 
         style.configure("Treeview.Heading",
-                        font=("Segoe UI", 13, "bold"),
+                        font=("Segoe UI", 16, "bold"),
                         background="#444",
                         foreground="white")
 
         style.map("Treeview",
-                background=[("selected", "#555")],      # Фон выбранной строки
-                foreground=[("selected", "white")])     # Текст выбранной строки (белый)
+                  background=[("selected", "#555")],
+                  foreground=[("selected", "white")])
 
-        self.tree = ttk.Treeview(table_frame, columns=("username", "role"), show="headings", height=8)
+        self.tree = ttk.Treeview(self.table_frame, columns=("username", "role"), show="headings", height=8)
         self.tree.heading("username", text="Логин")
         self.tree.heading("role", text="Роль")
-        self.tree.column("username", anchor="w", width=200)
+        self.tree.column("username", anchor="center", width=200)
         self.tree.column("role", anchor="center", width=100)
         self.tree.grid(row=0, column=0, sticky="nsew")
 
-        scrollbar = ttk.Scrollbar(table_frame, orient="vertical", command=self.tree.yview)
-        self.tree.configure(yscroll=scrollbar.set)
+        scrollbar = ttk.Scrollbar(self.table_frame, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscrollcommand=scrollbar.set)
         scrollbar.grid(row=0, column=1, sticky="ns")
 
         self.tree.bind("<Double-1>", self._on_edit_user)

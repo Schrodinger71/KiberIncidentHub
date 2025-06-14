@@ -18,7 +18,7 @@ class HistoryViewer(ctk.CTkFrame):
         self._load_data()
         
         # Установка заголовка окна
-        master.title(f"Журнал изменений (пользователь: {self.user['username']} | Роль: {self.user['role']})")
+        # master.title(f"Журнал изменений (пользователь: {self.user['username']} | Роль: {self.user['role']})")
 
     def _setup_ui(self):
         """Настройка интерфейса окна"""

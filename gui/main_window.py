@@ -5,7 +5,7 @@ import customtkinter as ctk
 
 from gui.history_window import HistoryViewer
 from gui.incident_tracker import IncidentTracker
-from gui.user_manager_window import UserManagerDialog
+from gui.user_manager_window import UserManagerDialogEmbed
 
 
 class GradientFrame(ctk.CTkCanvas):
@@ -42,8 +42,6 @@ class MainWindow(ctk.CTkFrame):
         self.db = db
         self.user_info = user_info
         self.on_logout = on_logout
-        self.incident_window = None
-        self.history_window = None
 
         # Цвета по ролям
         role_colors = {
@@ -62,119 +60,63 @@ class MainWindow(ctk.CTkFrame):
 
         # Градиентный фон
         self.gradient = GradientFrame(self, colors["gradient_start"], colors["gradient_end"], 
-                                   width=400, height=520, highlightthickness=0)
+                                      width=800, height=620, highlightthickness=0)
         self.gradient.pack(fill="both", expand=True)
 
-        self.inner_frame = ctk.CTkFrame(self.gradient, fg_color=colors["frame_color"], 
-                                      width=360, height=480)
+        # Основной контейнер
+        self.inner_frame = ctk.CTkFrame(self.gradient, fg_color=colors["frame_color"], width=760, height=580)
         self.inner_frame.place(relx=0.5, rely=0.5, anchor="center")
 
         master.title(f"Главное меню — {user_info['username']}")
-        master.geometry("400x520+700+300")
-        master.resizable(False, False)
+        master.geometry("1100x620+300+100")
+        master.resizable(True, True)
         master.configure(bg="#0f2027")
 
-        # Шрифты
         self.title_font = ctk.CTkFont(size=22, weight="bold")
         self.button_font = ctk.CTkFont(size=14, weight="bold")
 
         # Заголовок
         self.title_label = ctk.CTkLabel(
             self.inner_frame,
-            text=f"Добро пожаловать, {user_info['username']}!",
+            text=f"Добро пожаловать, {user_info['username']}! Ваша роль {user_info['role']}.",
             font=self.title_font,
             text_color="#FFFFFF"
         )
-        self.title_label.place(relx=0.5, rely=0.08, anchor="center")
+        self.title_label.pack(pady=(15, 5))
 
-        # Основные кнопки
-        button_options = {
-            "height": 45,
-            "width": 300,
-            "corner_radius": 12,
-            "font": self.button_font,
-            "anchor": "center"
-        }
+        # Вкладки
+        self.tabview = ctk.CTkTabview(self.inner_frame, width=720, height=460)
+        self.tabview.pack(pady=(10, 10))
 
-        # Список всех кнопок (и для админа, и для пользователя)
-        buttons = [
-            {
-                "text": "🛠 Управление инцидентами",
-                "fg_color": "#4a90e2",
-                "hover_color": "#357ABD",
-                "command": self.open_incident_tracker,
-                "rely": 0.22,
-                "admin_only": False
-            },
-            {
-                "text": "🏷 Статусы инцидентов",
-                "fg_color": "#5bc0de",
-                "hover_color": "#46b8da",
-                "command": self.open_statuses_manager,
-                "rely": 0.32,
-                "admin_only": False
-            },
-            {
-                "text": "🏢 Организации",
-                "fg_color": "#5cb85c",
-                "hover_color": "#4cae4c",
-                "command": self.open_organizations_manager,
-                "rely": 0.42,
-                "admin_only": False
-            },
-            {
-                "text": "👔 Ответственные",
-                "fg_color": "#f0ad4e",
-                "hover_color": "#eea236",
-                "command": self.open_responsibles_manager,
-                "rely": 0.52,
-                "admin_only": False
-            },
-            {
-                "text": "👥 Пользователи",
-                "fg_color": "#226fc6",
-                "hover_color": "#2D6DAC",
-                "command": self._open_user_manager,
-                "rely": 0.62,
-                "admin_only": True
-            },
-            {
-                "text": "🛡 Меры реагирования",
-                "fg_color": "#d9534f",
-                "hover_color": "#c9302c",
-                "command": self.open_measures_manager,
-                "rely": 0.72,
-                "admin_only": True
-            },
-            {
-                "text": "📜 Журнал изменений",
-                "fg_color": "#777777",
-                "hover_color": "#5e5e5e",
-                "command": self.open_history_viewer,
-                "rely": 0.82,
-                "admin_only": True
-            }
+        # Описание вкладок
+        self.tabs_config = [
+            {"text": "🛠 Управление инцидентами", "admin_only": False, "creator": self.create_incident_tab},
+            {"text": "🏷 Статусы инцидентов", "admin_only": False, "creator": self.create_statuses_tab},
+            {"text": "🏢 Организации", "admin_only": False, "creator": self.create_organizations_tab},
+            {"text": "👔 Ответственные", "admin_only": False, "creator": self.create_responsibles_tab},
+            {"text": "👥 Пользователи", "admin_only": True, "creator": self.create_users_tab},
+            {"text": "🛡 Меры реагирования", "admin_only": True, "creator": self.create_measures_tab},
+            {"text": "📜 Журнал изменений", "admin_only": True, "creator": self.create_history_tab},
         ]
 
-        # Создаем кнопки
-        for btn in buttons:
-            button = ctk.CTkButton(
-                self.inner_frame,
-                text=btn["text"],
-                fg_color=btn["fg_color"],
-                hover_color=btn["hover_color"],
-                text_color="white",
-                command=btn["command"],
-                state="normal" if (user_info["role"] == "admin" or not btn["admin_only"]) else "disabled",
-                **{k: v for k, v in button_options.items() if k != "anchor"}
-            )
-            if user_info["role"] != "admin" and btn["admin_only"]:
-                button.configure(text=btn["text"] + "(Доступ закрыт)")
-            button.configure(fg_color="#555555" if user_info["role"] != "admin" and btn["admin_only"] else btn["fg_color"])
-            button.place(relx=0.5, rely=btn["rely"], anchor="center")
+        self.tabs = {}  # сохраняем вкладки
 
+        # Создаем вкладки и наполняем
+        for tab_conf in self.tabs_config:
+            tab_name = tab_conf["text"]
+            tab = self.tabview.add(tab_name)
+            self.tabs[tab_name] = tab
 
-        # Кнопка выхода
+            if tab_conf["admin_only"] and self.user_info["role"] != "admin":
+                # Для не-админа - показываем заглушку
+                label = ctk.CTkLabel(tab, text="Доступ к этой вкладке разрешён только администраторам.",
+                                     font=ctk.CTkFont(size=16), text_color="#888888")
+                label.pack(expand=True, fill="both", pady=100)
+            else:
+                # Админ или обычная вкладка - вызываем функцию создания содержимого
+                tab_conf["creator"](tab)
+
+        # Создаем кнопку выхода
         self.logout_btn = ctk.CTkButton(
             self.inner_frame,
             text="🚪 Выйти",
@@ -187,86 +129,63 @@ class MainWindow(ctk.CTkFrame):
             corner_radius=10,
             font=self.button_font
         )
-        self.logout_btn.place(relx=0.5, rely=0.92, anchor="center")
+        self.logout_btn.pack(pady=(10, 10), side="bottom")
 
+        # Обработка попытки переключения на вкладки с admin_only при не-админе
+        self.last_selected_tab = self.tabview.get()
+        if self.user_info["role"] != "admin":
+            self.check_tab_change()
 
-    def open_incident_tracker(self):
-        """Открывает окно управления инцидентами"""
-        if self.incident_window is None or not self.incident_window.winfo_exists():
-            self.incident_window = ctk.CTkToplevel(self)
-            self.incident_window.geometry("800x600+150+150")
-            self.incident_window.title("Управление инцидентами")
-            tracker = IncidentTracker(self.incident_window, self.db, self.user_info)
-            tracker.pack(fill="both", expand=True)
-        else:
-            self.incident_window.lift()
+    def check_tab_change(self):
+        current_tab = self.tabview.get()
+        if current_tab != self.last_selected_tab:
+            # Найдем вкладку в конфиге
+            for tab_conf in self.tabs_config:
+                if tab_conf["text"] == current_tab and tab_conf["admin_only"]:
+                    # Вернуть назад
+                    self.tabview.set(self.tabs_config[0]["text"])
+                    messagebox.showwarning("Доступ запрещён", "Доступ к этой вкладке разрешён только администраторам.")
+                    break
+            self.last_selected_tab = self.tabview.get()
+        self.after(100, self.check_tab_change)
 
-    def _open_user_manager(self):
-        """Открывает окно управления пользователями"""
-        if self.user_info['role'] != 'admin':
-            messagebox.showwarning("Доступ запрещен", "Требуются права администратора")
-            return
-        UserManagerDialog(self, self.db, self.user_info)
+    # Методы для создания содержимого вкладок для админа/пользователя
+    def create_incident_tab(self, tab):
+        self.incident_tracker = IncidentTracker(tab, self.db, self.user_info)
+        self.incident_tracker.pack(fill="both", expand=True)
 
-    def open_statuses_manager(self):
-        """Открывает окно управления статусами инцидентов"""
-        status_window = ctk.CTkToplevel(self)
-        status_window.title("Управление статусами инцидентов")
-        status_window.geometry("600x400")
-        
-        # Здесь реализация интерфейса для работы с таблицей СтатусыИнцидентов
-        # ...
+    def create_statuses_tab(self, tab):
+        # Здесь добавь UI для статусов
+        pass
 
-    def open_organizations_manager(self):
-        """Окно управления организациями"""
-        org_window = ctk.CTkToplevel(self)
-        org_window.title("Управление организациями")
-        org_window.geometry("800x600")
-        
-        # Реализация работы с таблицей Организации
-        # ...
+    def create_organizations_tab(self, tab):
+        # Здесь добавь UI для организаций
+        pass
 
-    def open_responsibles_manager(self):
-        """Окно управления ответственными лицами"""
-        resp_window = ctk.CTkToplevel(self)
-        resp_window.title("Управление ответственными")
-        resp_window.geometry("900x700")
-        
-        # Работа с таблицей Ответственные + связь с Организациями
-        # ...
+    def create_responsibles_tab(self, tab):
+        # Здесь добавь UI для ответственных
+        pass
 
-    def open_measures_manager(self):
-        """Окно управления мерами реагирования"""
-        measures_window = ctk.CTkToplevel(self)
-        measures_window.title("Меры реагирования")
-        measures_window.geometry("600x500")
-        
-        # Управление таблицей МерыРеагирования
-        # ...
+    def create_users_tab(self, tab):
+        self.user_manager = UserManagerDialogEmbed(tab, self.db, self.user_info)
+        self.user_manager.pack(fill="both", expand=True)
 
-    def open_history_viewer(self):
-        """Открывает окно просмотра истории изменений"""
-        if self.user_info['role'] != 'admin':
-            ctk.CTkMessagebox(title="Ошибка", message="Доступно только администраторам", icon="cancel")
-            return
-        if self.history_window is None or not self.history_window.winfo_exists():
-            window = ctk.CTkToplevel(self)
-            window.geometry("1100x700+100+100")
-            HistoryViewer(window, self.db, self.user_info).pack(fill="both", expand=True)
-            self.history_window = window
-        else:
-            self.history_window.lift()
+    def create_measures_tab(self, tab):
+        # Здесь добавь UI для мер реагирования
+        pass
+
+    def create_history_tab(self, tab):
+        self.history_viewer = HistoryViewer(tab, self.db, self.user_info)
+        self.history_viewer.pack(fill="both", expand=True)
 
     def logout(self):
         logging.info(f"Пользователь {self.user_info['username']} вышел из системы.")
         self.db.log_change(
             username=self.user_info['username'],
-            таблица="None",
-            действие=f"Выход из системы",
-            поле="None",
+            таблица="Система",
+            действие="Выход из системы",
+            поле="Статус",
             старое_значение="None",
             новое_значение="None"
         )
-        if self.incident_window and self.incident_window.winfo_exists():
-            self.incident_window.destroy()
         self.on_logout()
