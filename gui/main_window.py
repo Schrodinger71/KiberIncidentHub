@@ -1,5 +1,7 @@
-import customtkinter as ctk
 from tkinter import messagebox
+
+import customtkinter as ctk
+
 from gui.incident_tracker import IncidentTracker
 from gui.user_manager_window import UserManagerDialog
 

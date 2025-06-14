@@ -1,7 +1,10 @@
-from tkinter import messagebox, ttk
-import customtkinter as ctk
-from tkinter import font as tkfont
 import logging
+from tkinter import font as tkfont
+from tkinter import messagebox, ttk
+
+import customtkinter as ctk
+
+
 class UserManagerDialog(ctk.CTkToplevel):
     def __init__(self, master, db, user_info):
         super().__init__(master)
