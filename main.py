@@ -77,7 +77,7 @@ class App(ctk.CTk):
     def show_main(self, user_info):
         """Показать главное окно"""
         self._clear_frame()
-        self.geometry("800x600+700+300")
+        self.geometry("1150x620+300+100")
         self.title(f"KiberIncidentHub - {user_info['username']}")
 
         self.current_frame = MainWindow(self, self.db, user_info, self.show_auth)

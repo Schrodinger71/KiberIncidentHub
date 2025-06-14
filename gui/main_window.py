@@ -9,6 +9,7 @@ import customtkinter as ctk
 from gui.history_window import HistoryViewer
 from gui.incident_tracker import IncidentTracker
 from gui.user_manager_window import UserManagerDialogEmbed
+from gui.profile import ProfileWindow
 
 
 class MainWindow(ctk.CTkFrame):
@@ -29,7 +30,7 @@ class MainWindow(ctk.CTkFrame):
         colors = role_colors[user_info["role"]]
 
         master.title(f"Главное меню — {user_info['username']}")
-        master.geometry("1100x620+300+100")
+        master.geometry("1150x620+300+100")
         master.resizable(True, True)
 
         # Цвет фона
@@ -54,9 +55,10 @@ class MainWindow(ctk.CTkFrame):
 
         # Вкладки
         self.tabview = ctk.CTkTabview(self.inner_frame, width=720, height=460)
-        self.tabview.pack(pady=(10, 10))
+        self.tabview.pack(pady=(5, 5))
 
         self.tabs_config = [
+            {"text": "👤 Профиль", "admin_only": False, "creator": self.create_profile_tab},
             {"text": "🛠 Управление инцидентами", "admin_only": False, "creator": self.create_incident_tab},
             {"text": "🏷 Статусы инцидентов", "admin_only": False, "creator": self.create_statuses_tab},
             {"text": "🏢 Организации", "admin_only": False, "creator": self.create_organizations_tab},
@@ -95,21 +97,12 @@ class MainWindow(ctk.CTkFrame):
         self.logout_btn.pack(pady=(10, 10), side="bottom")
 
         self.last_selected_tab = self.tabview.get()
-        if self.user_info["role"] != "admin":
-            self.check_tab_change()
-
-    def check_tab_change(self):
-        current_tab = self.tabview.get()
-        if current_tab != self.last_selected_tab:
-            for tab_conf in self.tabs_config:
-                if tab_conf["text"] == current_tab and tab_conf["admin_only"]:
-                    self.tabview.set(self.tabs_config[0]["text"])
-                    messagebox.showwarning("Доступ запрещён", "Доступ к этой вкладке разрешён только администраторам.")
-                    break
-            self.last_selected_tab = self.tabview.get()
-        self.after(100, self.check_tab_change)
 
     # Методы создания вкладок
+    def create_profile_tab(self, tab):
+        self.profile = ProfileWindow(tab, self.db, self.user_info)
+        self.profile.pack(fill="both", expand=True)
+
     def create_incident_tab(self, tab):
         self.incident_tracker = IncidentTracker(tab, self.db, self.user_info)
         self.incident_tracker.pack(fill="both", expand=True)
