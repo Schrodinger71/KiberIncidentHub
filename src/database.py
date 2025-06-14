@@ -81,8 +81,7 @@ class SecureDB:
                     поле TEXT,
                     старое_значение TEXT,
                     новое_значение TEXT,
-                    дата_изменения TEXT DEFAULT CURRENT_TIMESTAMP,
-                    FOREIGN KEY (username) REFERENCES users(username)
+                    дата_изменения TEXT DEFAULT CURRENT_TIMESTAMP
                 );
                 
                 CREATE TABLE IF NOT EXISTS Инцидент_Меры (
