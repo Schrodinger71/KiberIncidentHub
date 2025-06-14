@@ -1,16 +1,16 @@
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes, hmac
-
-from config.secrets import DB_ENCRYPTION_KEY, PASSWORD_HMAC_KEY
+from config import env_cfg
 
 
 class CryptoManager:
     def __init__(self):
         # Ключ для шифрования/дешифровки (Fernet)
-        self.cipher = Fernet(DB_ENCRYPTION_KEY)
+        self.cipher = Fernet(env_cfg.DB_ENCRYPTION_KEY)
+        
         
         # Ключ для HMAC хэширования паролей
-        self.hmac_key = PASSWORD_HMAC_KEY
+        self.hmac_key = env_cfg.PASSWORD_HMAC_KEY
 
     def encrypt(self, data: str) -> str:
         """Шифрование строковых данных"""

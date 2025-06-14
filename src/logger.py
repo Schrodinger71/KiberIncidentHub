@@ -4,7 +4,7 @@ from logging.handlers import RotatingFileHandler
 
 from cryptography.hazmat.primitives import hashes, hmac
 
-from config.secrets import LOG_HMAC_KEY
+from config import env_cfg
 
 
 class HMACLogFilter(logging.Filter):
@@ -14,7 +14,7 @@ class HMACLogFilter(logging.Filter):
         self.short_hmac = short_hmac
     
     def filter(self, record):
-        h = hmac.HMAC(LOG_HMAC_KEY, hashes.SHA256())
+        h = hmac.HMAC(env_cfg.LOG_HMAC_KEY, hashes.SHA256())
         h.update(record.msg.encode())
         full_hmac = h.finalize().hex()
         
