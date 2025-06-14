@@ -5,22 +5,22 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-def get_env_variable(name: str, default: str = "NULL") -> str:
+def get_env_variable(name: str, default: str = None) -> str:
     """
-    Функция для безопасного получения переменных окружения.
-    Если переменная не найдена, возвращает значение по умолчанию.
+    Получает переменную окружения. Если не найдена и default=None - вызывает ошибку.
     """
     value = os.getenv(name)
-    if not value:
-        logging.warning(f"Предупреждение: {name} не найден в файле .env. "
-              f"Используется значение по умолчанию: {default}"
-        )
+    if value is None:
+        if default is None:
+            logging.critical(f"КРИТИЧЕСКАЯ ОШИБКА: Переменная {name} обязательна!")
+            raise ValueError(f"Не найдена обязательная переменная: {name}")
+        logging.warning(f"Предупреждение: {name} не найден. Используется default: {default}")
         return default
     return value
 
 
 class ENVIRONMENT_VAR:
-    """Класс для доступа к переменным окружения в стиле ENVIRONMENT_VAR.KEY"""
+    """Класс для доступа к переменным окружения"""
     _instance = None
     
     def __new__(cls):
@@ -28,27 +28,23 @@ class ENVIRONMENT_VAR:
             cls._instance = super().__new__(cls)
         return cls._instance
 
-    # Загрузка переменных при инициализации класса
     @property
     def DB_ENCRYPTION_KEY(self) -> bytes:
-        """
-            Ключ для шифрования Базы Данных приложения
-        """
-        return get_env_variable("DB_ENCRYPTION_KEY").encode()
+        """Ключ для шифрования БД (обязательный)"""
+        key = get_env_variable("DB_ENCRYPTION_KEY")  # Без default - вызовет ошибку если нет
+        return key.encode()
 
     @property
     def LOG_HMAC_KEY(self) -> bytes:
-        """
-            Ключ для генерации HMAC записей в логирровании
-        """
-        return get_env_variable("LOG_HMAC_KEY").encode()
+        """Ключ для логирования (обязательный)"""
+        key = get_env_variable("LOG_HMAC_KEY")
+        return key.encode()
 
     @property
     def PASSWORD_HMAC_KEY(self) -> bytes:
-        """
-            Ключ для хранения хэшей паролей пользователей в БД
-        """
-        return get_env_variable("PASSWORD_HMAC_KEY").encode()
+        """Ключ для паролей (обязательный)"""
+        key = get_env_variable("PASSWORD_HMAC_KEY")
+        return key.encode()
 
 # Инициализация класса
 env_cfg = ENVIRONMENT_VAR()

@@ -4,6 +4,7 @@ from pathlib import Path
 
 import customtkinter as ctk
 
+from config import env_cfg
 from gui.auth import AuthDialog
 from gui.main_window import MainWindow
 from src.database import SecureDB
@@ -12,6 +13,22 @@ from src.logger import configure_logging
 
 def ensure_data_dir():
     Path("data").mkdir(exist_ok=True)
+
+
+def check_environment():
+    """Проверяет обязательные переменные при старте"""
+    try:
+        # Проверяем все критические переменные
+        _ = env_cfg.DB_ENCRYPTION_KEY
+        _ = env_cfg.LOG_HMAC_KEY
+        _ = env_cfg.PASSWORD_HMAC_KEY
+    except ValueError as e:
+        print(f"ОШИБКА КОНФИГУРАЦИИ: {e}")
+        print("Проверьте файл .env и обязательные переменные:")
+        print("- DB_ENCRYPTION_KEY")
+        print("- LOG_HMAC_KEY")
+        print("- PASSWORD_HMAC_KEY")
+        exit(1)
 
 
 class App(ctk.CTk):
@@ -60,5 +77,6 @@ class App(ctk.CTk):
 
 
 if __name__ == "__main__":
+    check_environment()
     app = App()
     app.mainloop()
