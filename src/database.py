@@ -181,10 +181,6 @@ class SecureDB:
             self.conn.execute("UPDATE users SET password_hash = ? WHERE username = ?", (new_hash, username))
 
     # Методы для управления организациями
-    def get_organizations(self):
-        cursor = self.conn.execute("SELECT организация_id, название, адрес, контактный_телефон FROM Организации")
-        return cursor.fetchall()
-
     def add_organization(self, название, адрес, контактный_телефон):
         with self.conn:
             self.conn.execute(
@@ -277,13 +273,6 @@ class SecureDB:
             )
 
     # --- Методы для Организаций ---
-    def add_organization(self, название, адрес=None, телефон=None):
-        with self.conn:
-            self.conn.execute(
-                "INSERT INTO Организации (название, адрес, контактный_телефон) VALUES (?, ?, ?)",
-                (название, адрес, телефон)
-            )
-
     def get_organizations(self):
         cursor = self.conn.execute(
             "SELECT организация_id, название, адрес, контактный_телефон FROM Организации"
