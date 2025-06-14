@@ -12,9 +12,9 @@ def get_env_variable(name: str, default: str = None) -> str:
     value = os.getenv(name)
     if value is None:
         if default is None:
-            logging.critical(f"КРИТИЧЕСКАЯ ОШИБКА: Переменная {name} обязательна!")
+            print(f"КРИТИЧЕСКАЯ ОШИБКА: Переменная {name} обязательна!")
             raise ValueError(f"Не найдена обязательная переменная: {name}")
-        logging.warning(f"Предупреждение: {name} не найден. Используется default: {default}")
+        print(f"Предупреждение: {name} не найден. Используется default: {default}")
         return default
     return value
 
