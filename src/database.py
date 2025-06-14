@@ -310,6 +310,8 @@ class SecureDB:
         )
         return cursor.fetchall()
 
+
+    # --- Методы для журнала изменений ---
     def log_change(self, username, таблица, действие, поле=None, старое_значение=None, новое_значение=None):
         """Логирует изменения в системе"""
         try:
@@ -327,6 +329,92 @@ class SecureDB:
         except sqlite3.Error as e:
             logging.error(f"Ошибка при логировании: {e}")
             raise
+
+    def get_audit_logs(self, table_filter=None, user_filter=None, date_from=None, date_to=None):
+        """
+        Получает записи журнала изменений с возможностью фильтрации
+        
+        Args:
+            table_filter: Фильтр по таблице (None - все таблицы)
+            user_filter: Фильтр по пользователю (None - все пользователи)
+            date_from: Начальная дата (включительно)
+            date_to: Конечная дата (включительно)
+            
+        Returns:
+            Список кортежей с записями журнала
+        """
+        try:
+            conditions = []
+            params = []
+            
+            if table_filter:
+                conditions.append("таблица = ?")
+                params.append(table_filter)
+                
+            if user_filter:
+                conditions.append("username = ?")
+                params.append(user_filter)
+                
+            if date_from:
+                conditions.append("дата_изменения >= ?")
+                params.append(date_from)
+                
+            if date_to:
+                conditions.append("дата_изменения <= ?")
+                params.append(date_to + " 23:59:59")
+            
+            query = "SELECT * FROM ИсторияИзменений"
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+            query += " ORDER BY дата_изменения DESC"
+            
+            cursor = self.conn.execute(query, params)
+            return cursor.fetchall()
+            
+        except sqlite3.Error as e:
+            logging.error(f"Ошибка получения журнала: {e}")
+            raise
+
+    def get_all_tables(self):
+        """Возвращает все таблицы в базе данных"""
+        cursor = self.conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        )
+        return [row[0] for row in cursor.fetchall() if row[0] != 'sqlite_sequence']
+
+    def get_audit_tables(self):
+        """Возвращает таблицы, которые встречаются в журнале изменений"""
+        try:
+            cursor = self.conn.execute(
+                "SELECT DISTINCT таблица FROM ИсторияИзменений ORDER BY таблица"
+            )
+            return [row[0] for row in cursor.fetchall()]
+        except sqlite3.Error as e:
+            logging.error(f"Ошибка получения таблиц журнала: {e}")
+            return []
+
+    def get_audit_tables(self):
+        """Возвращает список таблиц, встречающихся в журнале"""
+        try:
+            cursor = self.conn.execute(
+                "SELECT DISTINCT таблица FROM ИсторияИзменений ORDER BY таблица"
+            )
+            return [row[0] for row in cursor.fetchall()]
+        except sqlite3.Error as e:
+            logging.error(f"Ошибка получения таблиц журнала: {e}")
+            return []
+    
+    def get_audit_users(self):
+        """Возвращает список пользователей из журнала"""
+        try:
+            cursor = self.conn.execute(
+                "SELECT DISTINCT username FROM ИсторияИзменений ORDER BY username"
+            )
+            return [row[0] for row in cursor.fetchall()]
+        except sqlite3.Error as e:
+            logging.error(f"Ошибка получения пользователей журнала: {e}")
+            return []
+
 
     def close(self):
         self.conn.close()

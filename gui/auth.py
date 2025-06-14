@@ -34,11 +34,11 @@ class AuthDialog(ctk.CTkFrame):
             self.on_success(user)
             self.db.log_change(
                 username=username,
-                таблица="None",
+                таблица="Система",
                 действие=f"Успешный вход",
-                поле="None",
-                старое_значение="None",
-                новое_значение="None"
+                поле="Статус",
+                старое_значение="Завершено",
+                новое_значение="Активен"
             )
         else:
             messagebox.showerror("Ошибка", "Неверный логин или пароль")

@@ -1,7 +1,9 @@
+import logging
 from tkinter import messagebox
 
 import customtkinter as ctk
 
+from gui.history_window import HistoryViewer
 from gui.incident_tracker import IncidentTracker
 from gui.user_manager_window import UserManagerDialog
 
@@ -41,6 +43,7 @@ class MainWindow(ctk.CTkFrame):
         self.user_info = user_info
         self.on_logout = on_logout
         self.incident_window = None
+        self.history_window = None
 
         # Цвета по ролям
         role_colors = {
@@ -242,15 +245,28 @@ class MainWindow(ctk.CTkFrame):
         # ...
 
     def open_history_viewer(self):
-        """Просмотр истории изменений"""
-        history_window = ctk.CTkToplevel(self)
-        history_window.title("История изменений")
-        history_window.geometry("1000x800")
-        
-        # Отображение данных из ИсторияИзменений
-        # ...
+        """Открывает окно просмотра истории изменений"""
+        if self.user_info['role'] != 'admin':
+            ctk.CTkMessagebox(title="Ошибка", message="Доступно только администраторам", icon="cancel")
+            return
+        if self.history_window is None or not self.history_window.winfo_exists():
+            window = ctk.CTkToplevel(self)
+            window.geometry("1100x700+100+100")
+            HistoryViewer(window, self.db, self.user_info).pack(fill="both", expand=True)
+            self.history_window = window
+        else:
+            self.history_window.lift()
 
     def logout(self):
+        logging.info(f"Пользователь {self.user_info['username']} вышел из системы.")
+        self.db.log_change(
+            username=self.user_info['username'],
+            таблица="None",
+            действие=f"Выход из системы",
+            поле="None",
+            старое_значение="None",
+            новое_значение="None"
+        )
         if self.incident_window and self.incident_window.winfo_exists():
             self.incident_window.destroy()
         self.on_logout()
