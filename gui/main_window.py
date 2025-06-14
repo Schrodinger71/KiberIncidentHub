@@ -166,7 +166,7 @@ class MainWindow(ctk.CTkFrame):
                 **{k: v for k, v in button_options.items() if k != "anchor"}
             )
             if user_info["role"] != "admin" and btn["admin_only"]:
-                button.configure(text=btn["text"] + " (только админ)")
+                button.configure(text=btn["text"] + "(Доступ закрыт)")
             button.configure(fg_color="#555555" if user_info["role"] != "admin" and btn["admin_only"] else btn["fg_color"])
             button.place(relx=0.5, rely=btn["rely"], anchor="center")
 
