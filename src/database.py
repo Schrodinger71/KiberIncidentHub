@@ -180,6 +180,38 @@ class SecureDB:
         with self.conn:
             self.conn.execute("UPDATE users SET password_hash = ? WHERE username = ?", (new_hash, username))
 
+    # Методы для управления организациями
+    def get_organizations(self):
+        cursor = self.conn.execute("SELECT организация_id, название, адрес, контактный_телефон FROM Организации")
+        return cursor.fetchall()
+
+    def add_organization(self, название, адрес, контактный_телефон):
+        with self.conn:
+            self.conn.execute(
+                "INSERT INTO Организации (название, адрес, контактный_телефон) VALUES (?, ?, ?)",
+                (название, адрес, контактный_телефон)
+            )
+
+    def update_organization(self, организация_id, название, адрес, контактный_телефон):
+        with self.conn:
+            self.conn.execute(
+                "UPDATE Организации SET название = ?, адрес = ?, контактный_телефон = ? WHERE организация_id = ?",
+                (название, адрес, контактный_телефон, организация_id)
+            )
+
+    def delete_organization(self, организация_id):
+        with self.conn:
+            self.conn.execute(
+                "DELETE FROM Организации WHERE организация_id = ?",
+                (организация_id,)
+            )
+
+    def get_organization_by_id(self, организация_id):
+        cursor = self.conn.execute(
+            "SELECT организация_id, название, адрес, контактный_телефон FROM Организации WHERE организация_id = ?",
+            (организация_id,)
+        )
+        return cursor.fetchone()
 
     def add_incident(self, название, дата_обнаружения=None, статус_id=None, организация_id=None, ответственный_id=None):
         with self.conn:

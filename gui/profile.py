@@ -44,7 +44,7 @@ class ProfileWindow(ctk.CTkFrame):
         self.session_time_var = ctk.StringVar(value="Время сессии: 00:00")
         self.date_var = ctk.StringVar(value=f"Сегодня: {datetime.datetime.now().strftime('%d.%m.%Y')}")
 
-        def make_row(row, icon, text_var, font_size=14, text_color=None):
+        def make_row(row, icon, text_var, font_size=16, text_color=None):
             icon_label = ctk.CTkLabel(info_frame, text=icon, font=ctk.CTkFont(size=16))
             icon_label.grid(row=row, column=0, padx=(0, 10), sticky="w")
             text_label = ctk.CTkLabel(info_frame, textvariable=text_var, font=ctk.CTkFont(size=font_size), anchor="w")
@@ -53,9 +53,9 @@ class ProfileWindow(ctk.CTkFrame):
             text_label.grid(row=row, column=1, sticky="w")
 
         make_row(0, "       👤", self.username_var, font_size=16, text_color="#f1c40f")
-        make_row(1, "       🔑", self.role_var, font_size=14, text_color="#3498db")
-        make_row(2, "       ⏱", self.session_time_var, font_size=14)
-        make_row(3, "       📅", self.date_var, font_size=12)
+        make_row(1, "       🔑", self.role_var, font_size=16, text_color="#3498db")
+        make_row(2, "       ⏱", self.session_time_var, font_size=16)
+        make_row(3, "       📅", self.date_var, font_size=16)
 
         # Тултип для времени сессии
         def show_tooltip(event):

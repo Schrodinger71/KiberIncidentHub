@@ -2,7 +2,6 @@
 # Licensed under the Apache License, Version 2.0 (see LICENSE file)
 
 import logging
-from tkinter import messagebox
 
 import customtkinter as ctk
 
@@ -10,6 +9,7 @@ from gui.history_window import HistoryViewer
 from gui.incident_tracker import IncidentTracker
 from gui.user_manager_window import UserManagerDialogEmbed
 from gui.profile import ProfileWindow
+from gui.organization_manager import OrganizationManager
 
 
 class MainWindow(ctk.CTkFrame):
@@ -111,7 +111,8 @@ class MainWindow(ctk.CTkFrame):
         pass
 
     def create_organizations_tab(self, tab):
-        pass
+        org_manager = OrganizationManager(tab, self.db, self.user_info)
+        org_manager.pack(fill="both", expand=True)
 
     def create_responsibles_tab(self, tab):
         pass
