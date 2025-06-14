@@ -10,12 +10,11 @@ class IncidentTracker(ctk.CTkFrame):
         super().__init__(master)
         self.db = db
         self.user = user_info
-        # master.title(f"Инциденты (пользователь: {self.user['username']} | Роль: {self.user['role']}")
         self.selected_incident_id = None
         self._setup_ui()
         self._load_reference_data()
         self._load_incidents()
-        self._update_ui_permissions()  # Обновляем UI в зависимости от роли
+        self._update_ui_permissions()
 
     def _update_ui_permissions(self):
         """Обновляет доступные действия в зависимости от роли пользователя"""
@@ -74,6 +73,9 @@ class IncidentTracker(ctk.CTkFrame):
         # Список инцидентов
         self.incident_listbox = ctk.CTkScrollableFrame(self, width=700, height=300)
         self.incident_listbox.grid(row=2, column=0, columnspan=6, padx=10, pady=10, sticky="nsew")
+        
+        self.refresh_refs_button = ctk.CTkButton(self, text="Обновить справочники", command=self._load_reference_data)
+        self.refresh_refs_button.grid(row=1, column=4, padx=5, pady=5)
 
     def _load_reference_data(self):
         self.statuses = self.db.get_statuses()
