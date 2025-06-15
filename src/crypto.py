@@ -11,8 +11,7 @@ class CryptoManager:
     def __init__(self):
         # Ключ для шифрования/дешифровки (Fernet)
         self.cipher = Fernet(env_cfg.DB_ENCRYPTION_KEY)
-        
-        
+
         # Ключ для HMAC хэширования паролей
         self.hmac_key = env_cfg.PASSWORD_HMAC_KEY
 

@@ -32,7 +32,7 @@ class App(ctk.CTk):
         configure_logging()
         
         # Инициализация БД
-        self.db = SecureDB("data/incidents.db")
+        self.db = SecureDB("data/incidents.db.enc")
         self.current_frame = None
         
     def _setup_ui(self):
@@ -106,7 +106,10 @@ class App(ctk.CTk):
                 )
             except Exception as e:
                 logging.error(f"Ошибка логирования выхода: {e}")
-        
+
+        # Закрываем соединение и шифруем БД
+        self.db.close()
+
         self.destroy()
         sys.exit()
 
@@ -116,6 +119,10 @@ if __name__ == "__main__":
         app.mainloop()
     except Exception as e:
         logging.critical(f"Критическая ошибка: {e}", exc_info=True)
+        try:
+            app.db.close()
+        except:
+            pass
         ctk.CTkMessagebox(
             title="Фатальная ошибка",
             message=f"Приложение завершено с ошибкой:\n{str(e)}",

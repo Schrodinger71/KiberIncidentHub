@@ -1,4 +1,5 @@
 from tkinter import ttk
+
 import customtkinter as ctk
 
 from src.database import SecureDB

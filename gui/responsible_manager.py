@@ -1,5 +1,7 @@
 from tkinter import ttk
+
 import customtkinter as ctk
+
 
 class ResponsibleManager(ctk.CTkFrame):
     def __init__(self, master, db, user_info, organizations):

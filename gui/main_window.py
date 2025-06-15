@@ -7,10 +7,10 @@ import customtkinter as ctk
 
 from gui.history_window import HistoryViewer
 from gui.incident_tracker import IncidentTracker
-from gui.user_manager_window import UserManagerDialogEmbed
-from gui.profile import ProfileWindow
 from gui.organization_manager import OrganizationManager
+from gui.profile import ProfileWindow
 from gui.responsible_manager import ResponsibleManager
+from gui.user_manager_window import UserManagerDialogEmbed
 
 
 class MainWindow(ctk.CTkFrame):

@@ -1,5 +1,7 @@
-import customtkinter as ctk
 import datetime
+
+import customtkinter as ctk
+
 
 class ProfileWindow(ctk.CTkFrame):
     """Окно профиля пользователя с отображением имени, роли и времени сессии."""

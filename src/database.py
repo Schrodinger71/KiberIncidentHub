@@ -2,6 +2,7 @@
 # Licensed under the Apache License, Version 2.0 (see LICENSE file)
 
 import logging
+import os
 import sqlite3
 from datetime import datetime
 from pathlib import Path
@@ -10,19 +11,61 @@ from src.crypto import CryptoManager
 
 
 class SecureDB:
-    def __init__(self, db_path: str):
-        self.db_path = Path(db_path)
+    def __init__(self, encrypted_path: str):
+        self.encrypted_path = Path(encrypted_path)
+        self.decrypted_path = self.encrypted_path.with_suffix('')  # Убираем .enc
         self.crypto = CryptoManager()
-        self.conn = sqlite3.connect(self.db_path)
+        self._decrypt_db_file()
+        self.conn = sqlite3.connect(self.decrypted_path)
         self.conn.execute("PRAGMA foreign_keys = ON;")
         self._init_db()
 
-    def _init_db(self):
-        """Создает БД и таблицы если они не существуют"""
-        if not self.db_path.exists():
-            logging.info(f"Создаем новую БД: {self.db_path}")
+    def _decrypt_db_file(self):
+        if self.encrypted_path.exists():
+            with open(self.encrypted_path, "rb") as f:
+                encrypted_data = f.read()
+            decrypted_data = self.crypto.cipher.decrypt(encrypted_data)
+            with open(self.decrypted_path, "wb") as f:
+                f.write(decrypted_data)
+        else:
+            logging.warning("Зашифрованная БД не найдена. Будет создана новая.")
 
-        # Создание таблицы пользователей
+    def _encrypt_db_file(self):
+        if self.decrypted_path.exists():
+            logging.info(f"Шифрую файл {self.decrypted_path}")
+            with open(self.decrypted_path, "rb") as f:
+                raw_data = f.read()
+            encrypted_data = self.crypto.cipher.encrypt(raw_data)
+            if encrypted_data:
+                with open(self.encrypted_path, "wb") as f:
+                    f.write(encrypted_data)
+                logging.info(f"Файл зашифрован и записан в {self.encrypted_path}")
+                os.remove(self.decrypted_path)
+                logging.info(f"Удалён расшифрованный файл {self.decrypted_path}")
+            else:
+                logging.error("Ошибка: зашифрованные данные пусты!")
+        else:
+            logging.warning(f"Файл для шифрования {self.decrypted_path} не найден")
+
+    def close(self):
+        if self.conn:
+            try:
+                self.conn.commit()
+            except Exception as e:
+                logging.error(f"Ошибка при коммите БД: {e}")
+
+            self.conn.close()
+            logging.info("Соединение с БД закрыто")
+        else:
+            logging.warning("Соединение с БД уже было закрыто или не создано")
+
+        logging.debug(f"Проверка перед шифрованием: файл существует? {self.decrypted_path.exists()}, путь: {self.decrypted_path}")
+        
+        self._encrypt_db_file()
+
+    def _init_db(self):
+        if not self.decrypted_path.exists():
+            logging.info(f"Создаем новую БД: {self.decrypted_path}")
         self._init_schema()
 
         # Создание остальных таблиц
@@ -452,7 +495,3 @@ class SecureDB:
         except sqlite3.Error as e:
             logging.error(f"Ошибка получения пользователей журнала: {e}")
             return []
-
-
-    def close(self):
-        self.conn.close()
