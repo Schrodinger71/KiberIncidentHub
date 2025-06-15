@@ -4,13 +4,16 @@
 import logging
 import os
 import sqlite3
-from datetime import datetime
+import datetime
 from pathlib import Path
+import shutil
 
 from src.crypto import CryptoManager
 
 
 class SecureDB:
+    backups_dir = Path("backups")
+
     def __init__(self, encrypted_path: str):
         self.encrypted_path = Path(encrypted_path)
         self.crypto = CryptoManager()
@@ -24,8 +27,32 @@ class SecureDB:
             self._init_schema()
             self._init_db()
 
+    def _start_auto_backup(self, root):
+        self._create_backup("auto")
+        root.after(300000, lambda: self._start_auto_backup(root))
+
+    def _create_backup(self, prefix: str):
+        """Создаёт зашифрованный бэкап с датой в папку backups"""
+        if not self.backups_dir.exists():
+            self.backups_dir.mkdir(parents=True)
+
+        timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        backup_filename = f"{prefix}_backup_{timestamp}.db.enc"
+        backup_path = self.backups_dir / backup_filename
+
+        # Просто копируем текущий зашифрованный файл в бэкап
+        if self.encrypted_path.exists():
+            shutil.copy2(self.encrypted_path, backup_path)
+            logging.info(f"Создан бэкап БД: {backup_path}")
+        else:
+            logging.warning("Файл зашифрованной БД не найден для бэкапа")
+
     def _load_encrypted_into_memory(self):
         logging.info("Загружаю зашифрованную БД в память")
+
+        # Перед загрузкой БД создаём бэкап
+        self._create_backup("startup")
+
         decrypted_data = self.crypto.cipher.decrypt(self.encrypted_path.read_bytes())
         
         # Временный файл для расшифрованной БД
@@ -74,6 +101,10 @@ class SecureDB:
             except Exception as e:
                 logging.error(f"Ошибка при коммите БД: {e}")
             self._encrypt_db_file()
+            
+            # Создаём бэкап при закрытии
+            self._create_backup("shutdown")
+            
             self.conn.close()
             logging.info("Соединение с БД закрыто и зашифровано")
         else:

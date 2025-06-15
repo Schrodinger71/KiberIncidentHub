@@ -33,6 +33,8 @@ class App(ctk.CTk):
         
         # Инициализация БД
         self.db = SecureDB("data/incidents.db.enc")
+        self.db._start_auto_backup(self) # Запускаем автобэкап БД
+
         self.current_frame = None
         
     def _setup_ui(self):
