@@ -17,6 +17,8 @@ class HistoryViewer(ctk.CTkFrame):
         self._setup_ui()
         self._load_data()
         
+        self._start_auto_refresh()
+        
         # Установка заголовка окна
         # master.title(f"Журнал изменений (пользователь: {self.user['username']} | Роль: {self.user['role']})")
 
@@ -158,10 +160,11 @@ class HistoryViewer(ctk.CTkFrame):
         # Теги для чередования строк
         self.tree.tag_configure("oddrow", background="#333333")
         self.tree.tag_configure("evenrow", background=BG_COLOR)
-        
-        # Кнопка обновления
-        refresh_btn = ctk.CTkButton(self, text="Обновить данные", command=self._load_data)
-        refresh_btn.grid(row=2, column=0, pady=10)
+
+
+    def _start_auto_refresh(self):
+        self._load_data()
+        self.after(10000, self._start_auto_refresh)
 
     def _load_data(self):
         """Загрузка данных с учетом фильтров"""

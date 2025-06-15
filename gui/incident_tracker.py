@@ -15,6 +15,7 @@ class IncidentTracker(ctk.CTkFrame):
         self._load_reference_data()
         self._load_incidents()
         self._update_ui_permissions()
+        self._start_auto_refresh()
 
     def _update_ui_permissions(self):
         """Обновляет доступные действия в зависимости от роли пользователя"""
@@ -73,9 +74,11 @@ class IncidentTracker(ctk.CTkFrame):
         # Список инцидентов
         self.incident_listbox = ctk.CTkScrollableFrame(self, width=700, height=300)
         self.incident_listbox.grid(row=2, column=0, columnspan=6, padx=10, pady=10, sticky="nsew")
-        
-        self.refresh_refs_button = ctk.CTkButton(self, text="Обновить справочники", command=self._load_reference_data)
-        self.refresh_refs_button.grid(row=1, column=4, padx=5, pady=5)
+
+
+    def _start_auto_refresh(self):
+        self._load_reference_data()
+        self.after(10000, self._start_auto_refresh)
 
     def _load_reference_data(self):
         self.statuses = self.db.get_statuses()
@@ -90,6 +93,7 @@ class IncidentTracker(ctk.CTkFrame):
 
         self.resp_combo.configure(values=[r[1] for r in self.responsibles])
         if self.responsibles: self.resp_var.set(self.responsibles[0][1])
+        self._load_incidents()
 
     def _load_incidents(self, search_term: str = None):
         self._clear_listbox()

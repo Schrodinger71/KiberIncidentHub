@@ -12,6 +12,7 @@ class UserManagerDialogEmbed(ctk.CTkFrame):
         self.user_info = user_info
         self._setup_ui()
         self._load_users()
+        self._start_auto_refresh()
 
     def _setup_ui(self):
         self.grid_columnconfigure((0, 1, 2, 3, 4, 5), weight=1)
@@ -94,6 +95,10 @@ class UserManagerDialogEmbed(ctk.CTkFrame):
         # ====== Кнопка удаления ======
         self.delete_btn = ctk.CTkButton(self, text="Удалить выбранного", command=self._delete_selected_user)
         self.delete_btn.grid(row=3, column=0, pady=10, padx=20, sticky="ew")
+
+    def _start_auto_refresh(self):
+        self._load_users()
+        self.after(10000, self._start_auto_refresh)
 
     def _create_user(self):
         username = self.username_entry.get()

@@ -10,6 +10,7 @@ from gui.incident_tracker import IncidentTracker
 from gui.user_manager_window import UserManagerDialogEmbed
 from gui.profile import ProfileWindow
 from gui.organization_manager import OrganizationManager
+from gui.responsible_manager import ResponsibleManager
 
 
 class MainWindow(ctk.CTkFrame):
@@ -115,7 +116,9 @@ class MainWindow(ctk.CTkFrame):
         org_manager.pack(fill="both", expand=True)
 
     def create_responsibles_tab(self, tab):
-        pass
+        organizations = self.db.get_organizations()
+        self.user_manager = ResponsibleManager(tab, self.db, self.user_info, organizations)
+        self.user_manager.pack(fill="both", expand=True)
 
     def create_users_tab(self, tab):
         self.user_manager = UserManagerDialogEmbed(tab, self.db, self.user_info)
@@ -135,7 +138,7 @@ class MainWindow(ctk.CTkFrame):
             таблица="Система",
             действие="Выход из системы",
             поле="Статус",
-            старое_значение="None",
-            новое_значение="None"
+            старое_значение="Активен",
+            новое_значение="Завершено"
         )
         self.on_logout()

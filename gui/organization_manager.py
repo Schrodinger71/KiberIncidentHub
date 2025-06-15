@@ -13,6 +13,7 @@ class OrganizationManager(ctk.CTkFrame):
         self._setup_ui()
         self._load_organizations()
         self._update_ui_permissions()
+        self._start_auto_refresh()
 
     def _setup_ui(self):
         self.grid_columnconfigure((0, 1, 2, 3), weight=1)
@@ -62,6 +63,10 @@ class OrganizationManager(ctk.CTkFrame):
         self.name_entry.configure(state="normal")
         self.address_entry.configure(state="normal")
         self.phone_entry.configure(state="normal")
+
+    def _start_auto_refresh(self):
+        self._load_organizations()
+        self.after(10000, self._start_auto_refresh)
 
     def _load_organizations(self):
         for row in self.tree.get_children():

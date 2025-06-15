@@ -292,6 +292,20 @@ class SecureDB:
             "SELECT ответственный_id, имя, должность, электронная_почта, организация_id FROM Ответственные"
         )
         return cursor.fetchall()
+    
+    def get_responsible_by_id(self, ответственный_id):
+        cursor = self.conn.execute(
+            "SELECT ответственный_id, имя, должность, электронная_почта, организация_id FROM Ответственные WHERE ответственный_id = ?",
+            (ответственный_id,)
+        )
+        return cursor.fetchone()
+
+    def update_responsible(self, ответственный_id, имя, должность=None, email=None, организация_id=None):
+        with self.conn:
+            self.conn.execute(
+                "UPDATE Ответственные SET имя = ?, должность = ?, электронная_почта = ?, организация_id = ? WHERE ответственный_id = ?",
+                (имя, должность, email, организация_id, ответственный_id)
+            )
 
     # --- Методы для Статусов Инцидентов ---
     def get_statuses(self):
