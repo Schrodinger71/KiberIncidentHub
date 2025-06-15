@@ -13,39 +13,59 @@ from src.crypto import CryptoManager
 class SecureDB:
     def __init__(self, encrypted_path: str):
         self.encrypted_path = Path(encrypted_path)
-        self.decrypted_path = self.encrypted_path.with_suffix('')  # Убираем .enc
         self.crypto = CryptoManager()
-        self._decrypt_db_file()
-        self.conn = sqlite3.connect(self.decrypted_path)
+        self.conn = sqlite3.connect(":memory:")  # Работаем только в памяти
         self.conn.execute("PRAGMA foreign_keys = ON;")
-        self._init_db()
 
-    def _decrypt_db_file(self):
         if self.encrypted_path.exists():
-            with open(self.encrypted_path, "rb") as f:
-                encrypted_data = f.read()
-            decrypted_data = self.crypto.cipher.decrypt(encrypted_data)
-            with open(self.decrypted_path, "wb") as f:
-                f.write(decrypted_data)
+            self._load_encrypted_into_memory()
         else:
             logging.warning("Зашифрованная БД не найдена. Будет создана новая.")
+            self._init_schema()
+            self._init_db()
+
+    def _load_encrypted_into_memory(self):
+        logging.info("Загружаю зашифрованную БД в память")
+        decrypted_data = self.crypto.cipher.decrypt(self.encrypted_path.read_bytes())
+        
+        # Временный файл для расшифрованной БД
+        temp_path = self.encrypted_path.with_suffix('.tmp.db')
+        try:
+            with open(temp_path, "wb") as f:
+                f.write(decrypted_data)
+            temp_conn = sqlite3.connect(temp_path)
+            temp_conn.backup(self.conn)
+            temp_conn.close()
+            logging.info("БД успешно загружена в память")
+        except Exception as e:
+            logging.error(f"Ошибка при расшифровке и загрузке БД: {e}")
+        finally:
+            if temp_path.exists():
+                os.remove(temp_path)
+
 
     def _encrypt_db_file(self):
-        if self.decrypted_path.exists():
-            logging.info(f"Шифрую файл {self.decrypted_path}")
-            with open(self.decrypted_path, "rb") as f:
+        temp_path = self.encrypted_path.with_suffix('.tmp.db')
+        try:
+            disk_conn = sqlite3.connect(temp_path)
+            self.conn.backup(disk_conn)
+            disk_conn.close()
+
+            with open(temp_path, "rb") as f:
                 raw_data = f.read()
             encrypted_data = self.crypto.cipher.encrypt(raw_data)
+
             if encrypted_data:
                 with open(self.encrypted_path, "wb") as f:
                     f.write(encrypted_data)
-                logging.info(f"Файл зашифрован и записан в {self.encrypted_path}")
-                os.remove(self.decrypted_path)
-                logging.info(f"Удалён расшифрованный файл {self.decrypted_path}")
+                logging.info(f"БД зашифрована в файл {self.encrypted_path}")
             else:
                 logging.error("Ошибка: зашифрованные данные пусты!")
-        else:
-            logging.warning(f"Файл для шифрования {self.decrypted_path} не найден")
+        except Exception as e:
+            logging.error(f"Ошибка при шифровании БД: {e}")
+        finally:
+            if temp_path.exists():
+                os.remove(temp_path)
 
     def close(self):
         if self.conn:
@@ -53,21 +73,51 @@ class SecureDB:
                 self.conn.commit()
             except Exception as e:
                 logging.error(f"Ошибка при коммите БД: {e}")
-
+            self._encrypt_db_file()
             self.conn.close()
-            logging.info("Соединение с БД закрыто")
+            logging.info("Соединение с БД закрыто и зашифровано")
         else:
             logging.warning("Соединение с БД уже было закрыто или не создано")
 
-        logging.debug(f"Проверка перед шифрованием: файл существует? {self.decrypted_path.exists()}, путь: {self.decrypted_path}")
-        
-        self._encrypt_db_file()
+    def _init_schema(self):
+        """Создаёт таблицу пользователей"""
+        with self.conn:
+            self.conn.execute('''
+                CREATE TABLE IF NOT EXISTS users (
+                    username TEXT PRIMARY KEY,
+                    password_hash TEXT NOT NULL,
+                    role TEXT NOT NULL CHECK (role IN ('admin', 'user'))
+                );
+            ''')
+
+    def _seed_initial_data(self):
+        """Заполняет начальные справочники"""
+        with self.conn:
+            self.conn.executemany(
+                "INSERT OR IGNORE INTO СтатусыИнцидентов VALUES (?, ?)",
+                [(1, 'Открыт'), (2, 'В работе'), (3, 'Закрыт')]
+            )
+
+            self.conn.execute(
+                "INSERT OR IGNORE INTO Организации VALUES (?, ?, ?, ?)",
+                (1, 'ГосСОПКА', 'Москва, ул. Кибербезопасности, 1', '+79990001122')
+            )
+            
+            # Проверка: есть ли пользователи
+            cur = self.conn.execute("SELECT COUNT(*) FROM users")
+            count = cur.fetchone()[0]
+
+            if count == 0:
+                # Если нет ни одного пользователя — создаём админа
+                admin_pass = self.crypto.hash_password("adminpass")
+                self.conn.execute(
+                    "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
+                    ("admin", admin_pass, "admin")
+                )
+                logging.info("Таблица пользователей полностью пуста. Создан новый пользователь имя:пароль -> admin:adminpass")
 
     def _init_db(self):
-        if not self.decrypted_path.exists():
-            logging.info(f"Создаем новую БД: {self.decrypted_path}")
         self._init_schema()
-
         # Создание остальных таблиц
         with self.conn:
             self.conn.executescript("""
@@ -141,43 +191,6 @@ class SecureDB:
 
         # Заполняем справочники начальными данными
         self._seed_initial_data()
-
-    def _init_schema(self):
-        """Создаёт таблицу пользователей"""
-        with self.conn:
-            self.conn.execute('''
-                CREATE TABLE IF NOT EXISTS users (
-                    username TEXT PRIMARY KEY,
-                    password_hash TEXT NOT NULL,
-                    role TEXT NOT NULL CHECK (role IN ('admin', 'user'))
-                );
-            ''')
-
-    def _seed_initial_data(self):
-        """Заполняет начальные справочники"""
-        with self.conn:
-            self.conn.executemany(
-                "INSERT OR IGNORE INTO СтатусыИнцидентов VALUES (?, ?)",
-                [(1, 'Открыт'), (2, 'В работе'), (3, 'Закрыт')]
-            )
-
-            self.conn.execute(
-                "INSERT OR IGNORE INTO Организации VALUES (?, ?, ?, ?)",
-                (1, 'ГосСОПКА', 'Москва, ул. Кибербезопасности, 1', '+79990001122')
-            )
-            
-            # Проверка: есть ли пользователи
-            cur = self.conn.execute("SELECT COUNT(*) FROM users")
-            count = cur.fetchone()[0]
-
-            if count == 0:
-                # Если нет ни одного пользователя — создаём админа
-                admin_pass = self.crypto.hash_password("adminpass")
-                self.conn.execute(
-                    "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)",
-                    ("admin", admin_pass, "admin")
-                )
-                logging.info("Таблица пользователей полностью пуста. Создан новый пользователь имя:пароль -> admin:adminpass")
 
     def add_user(self, username: str, password: str, role: str = 'user'):
         """Добавляет пользователя с хэшированным паролем"""
