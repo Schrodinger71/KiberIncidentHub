@@ -17,7 +17,7 @@ class SecureDB:
     def __init__(self, encrypted_path: str):
         self.encrypted_path = Path(encrypted_path)
         self.crypto = CryptoManager()
-        self.conn = sqlite3.connect(":memory:")  # Работаем только в памяти
+        self.conn = sqlite3.connect(":memory:")
         self.conn.execute("PRAGMA foreign_keys = ON;")
 
         if self.encrypted_path.exists():
