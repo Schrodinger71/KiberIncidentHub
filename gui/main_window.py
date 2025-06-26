@@ -11,6 +11,8 @@ from gui.organization_manager import OrganizationManager
 from gui.profile import ProfileWindow
 from gui.responsible_manager import ResponsibleManager
 from gui.user_manager_window import UserManagerDialogEmbed
+from gui.status_manager import StatusManager
+from gui.measure_manager import MeasureManager
 
 
 class MainWindow(ctk.CTkFrame):
@@ -61,7 +63,7 @@ class MainWindow(ctk.CTkFrame):
         self.tabs_config = [
             {"text": "👤 Профиль", "admin_only": False, "creator": self.create_profile_tab},
             {"text": "🛠 Управление инцидентами", "admin_only": False, "creator": self.create_incident_tab},
-            {"text": "🏷 Статусы инцидентов", "admin_only": False, "creator": self.create_statuses_tab},
+            {"text": "🏷 Статусы инцидентов", "admin_only": True, "creator": self.create_statuses_tab},
             {"text": "🏢 Организации", "admin_only": False, "creator": self.create_organizations_tab},
             {"text": "👔 Ответственные", "admin_only": False, "creator": self.create_responsibles_tab},
             {"text": "👥 Пользователи", "admin_only": True, "creator": self.create_users_tab},
@@ -109,7 +111,8 @@ class MainWindow(ctk.CTkFrame):
         self.incident_tracker.pack(fill="both", expand=True)
 
     def create_statuses_tab(self, tab):
-        pass
+        self.status_manager = StatusManager(tab, self.db, self.user_info)
+        self.status_manager.pack(fill="both", expand=True)
 
     def create_organizations_tab(self, tab):
         org_manager = OrganizationManager(tab, self.db, self.user_info)
@@ -125,7 +128,8 @@ class MainWindow(ctk.CTkFrame):
         self.user_manager.pack(fill="both", expand=True)
 
     def create_measures_tab(self, tab):
-        pass
+        self.measure_manager = MeasureManager(tab, self.db, self.user_info)
+        self.measure_manager.pack(fill="both", expand=True)
 
     def create_history_tab(self, tab):
         self.history_viewer = HistoryViewer(tab, self.db, self.user_info)

@@ -401,6 +401,24 @@ class SecureDB:
         )
         return cursor.fetchall()
 
+    # Добавление статуса
+    def add_status(self, status: str):
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "INSERT INTO СтатусыИнцидентов (статус) VALUES (?)",
+            (status,)
+        )
+        self.conn.commit()
+
+    # Удаление статуса
+    def delete_status(self, status_id: int):
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "DELETE FROM СтатусыИнцидентов WHERE статус_инцидента_id = ?",
+            (status_id,)
+        )
+        self.conn.commit()
+
     # --- Методы для Мер Реагирования ---
     def add_response_measure(self, описание):
         with self.conn:
@@ -414,6 +432,13 @@ class SecureDB:
             "SELECT мера_реагирования_id, описание FROM МерыРеагирования"
         )
         return cursor.fetchall()
+
+    def delete_response_measure(self, measure_id):
+        with self.conn:
+            self.conn.execute(
+                "DELETE FROM МерыРеагирования WHERE мера_реагирования_id = ?",
+                (measure_id,)
+            )
 
     # --- Методы для связей между инцидентами и мерами реагирования ---
     def link_incident_measure(self, инцидент_id, мера_реагирования_id):
