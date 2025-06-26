@@ -153,6 +153,10 @@ class IncidentTracker(ctk.CTkFrame):
         if selected_widget:
             selected_widget.configure(fg_color="#333333")
 
+        measures = self.db.get_measures_for_incident(inc_id)
+        measures_text = ", ".join([m[1] for m in measures]) if measures else "Нет мер реагирования"
+        widget.bind("<Double-Button-1>", lambda e, data=incident_data: self._open_passport_window(data[0]))
+
 
     def _edit_incident(self):
         if not self.selected_incident_id:
@@ -241,3 +245,45 @@ class IncidentTracker(ctk.CTkFrame):
     def _search_incidents(self):
         term = self.search_entry.get().strip()
         self._load_incidents(search_term=term)
+
+    def _open_passport_window(self, incident_id):
+        passport = self.db.get_passport(incident_id)
+
+        passport_window = ctk.CTkToplevel()
+        passport_window.title(f"Паспорт инцидента ID {incident_id}")
+        passport_window.geometry("500x400")
+
+        labels = ["Уровень критичности:", "Источник угрозы:", "Последствия:", "Тип инцидента:", "Категория инцидента:"]
+        entries = []
+
+        for idx, label_text in enumerate(labels):
+            label = ctk.CTkLabel(passport_window, text=label_text, anchor="w")
+            label.grid(row=idx, column=0, padx=10, pady=5, sticky="w")
+
+            entry = ctk.CTkEntry(passport_window, width=300)
+            entry.grid(row=idx, column=1, padx=10, pady=5)
+            entries.append(entry)
+
+        # Если паспорт найден — заполняем
+        if passport:
+            for entry, value in zip(entries, passport):
+                entry.insert(0, value)
+
+        def save_passport():
+            values = [entry.get().strip() for entry in entries]
+            if any(v == "" for v in values):
+                messagebox.showerror("Ошибка", "Все поля должны быть заполнены!")
+                return
+
+            if passport:  # Обновляем
+                self.db.update_passport(incident_id, *values)
+                messagebox.showinfo("Успех", "Паспорт обновлён.")
+            else:  # Создаём
+                self.db.add_passport(incident_id, *values)
+                messagebox.showinfo("Успех", "Паспорт создан.")
+            passport_window.destroy()
+
+        save_button = ctk.CTkButton(passport_window, text="Сохранить", command=save_passport)
+        save_button.grid(row=len(labels), column=0, columnspan=2, pady=15)
+
+        passport_window.mainloop()
