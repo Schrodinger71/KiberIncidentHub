@@ -318,6 +318,12 @@ class SecureDB:
 
     def delete_incident(self, инцидент_id):
         with self.conn:
+            # Сначала удалить связанные записи из ПаспортаИнцидентов
+            self.conn.execute(
+                "DELETE FROM ПаспортаИнцидентов WHERE инцидент_id = ?",
+                (инцидент_id,)
+            )
+            # Потом удалить сам инцидент
             self.conn.execute(
                 "DELETE FROM Инциденты WHERE инцидент_id = ?",
                 (инцидент_id,)

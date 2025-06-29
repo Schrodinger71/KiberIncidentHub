@@ -112,6 +112,9 @@ class IncidentTracker(ctk.CTkFrame):
             label = ctk.CTkButton(self.incident_listbox, text=text, anchor="w", command=lambda i=inc: self._select_incident(i))
             label.pack(fill="x", pady=2, padx=2)
             self.incident_widgets.append(label)
+            # Привязка двойного клика с захватом текущего inc_id
+            label.bind("<Double-Button-1>", lambda e, inc_id=inc_id: self._open_passport_window(inc_id))
+            self.incident_widgets.append(label)
 
         if not incidents:
             ctk.CTkLabel(self.incident_listbox, text="Нет инцидентов").pack(pady=5)
@@ -153,9 +156,9 @@ class IncidentTracker(ctk.CTkFrame):
         if selected_widget:
             selected_widget.configure(fg_color="#333333")
 
-        measures = self.db.get_measures_for_incident(inc_id)
-        measures_text = ", ".join([m[1] for m in measures]) if measures else "Нет мер реагирования"
-        widget.bind("<Double-Button-1>", lambda e, data=incident_data: self._open_passport_window(data[0]))
+        # measures = self.db.get_measures_for_incident(inc_id)
+        # measures_text = ", ".join([m[1] for m in measures]) if measures else "Нет мер реагирования"
+        # widget.bind("<Double-Button-1>", lambda e, data=incident_data: self._open_passport_window(data[0]))
 
 
     def _edit_incident(self):
