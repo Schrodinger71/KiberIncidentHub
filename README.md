@@ -73,7 +73,7 @@ KiberIncidentHub/
 ├── config.py             # Конфигурация
 ├── main.py               # Точка входа. Класс App
 ├── requirements.txt      # Зависимости
-├── LICENSE               # Лицензия на код
+├── LICENSE               # Лицензия на код Apache License V2.0
 └── README.md             # Документация
 ```
 
