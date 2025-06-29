@@ -46,27 +46,34 @@ python main.py
 ```
 KiberIncidentHub/
 │
-├── src/                  # Бизнес-логика и безопасность
+├── src/                  # Логика менеджеры и безопасность
 │   ├── database.py       # SecureDB: SQLite с шифрованием
 │   ├── crypto.py         # CryptoManager: AES-256
-│   ├── models.py         # Data-классы: Инциденты, Пользователи
 │   └── logger.py         # Безопасное логгирование (HMAC)
 │
-├── gui/                  # Графический интерфейс (CustomTkinter)
-│   ├── main_window.py    # Главное окно (MainMenu, IncidentTracker)
-│   ├── auth.py           # Окно авторизации
-│   └── widgets.py        # Пользовательские виджеты
+├── gui/                        # Графический интерфейс (CustomTkinter)
+│   ├── main_window.py          # Главное окно MainMenu
+│   ├── auth.py                 # Окно авторизации
+│   ├── history_window.py       # Окно просмотра Журнала изменений
+│   ├── incident_tracker.py     # Окно управления инцидетами
+│   ├── measure_manager.py      # Окно описание меры реагирования
+│   ├── organization_manager.py # Окно управления организациями
+│   ├── profile.py              # Окно профиля пользователя
+│   ├── responsible_manager.py  # Окно управления ответственными
+│   ├── status_manager.py       # Окно управления статусами
+│   └── user_manager_window.py  # Окно управления пользователями ПО
 │
-├── config/               # Конфигурация
-│   ├── settings.py       # Цвета, пути, конфиги
-│   └── secrets.py        # Ключи шифрования (в .gitignore)
+├── backups/              # резервные копии бэкапы базы данных
 │
 ├── data/                 # Данные и логи
-│   ├── incidents.db      # Зашифрованная SQLite БД
+│   ├── incidents.db.enc  # Зашифрованная SQLite БД
 │   └── audit.log         # Подписанный журнал действий
 │
-├── main.py               # Точка входа
+├──
+├── config.py             # Конфигурация
+├── main.py               # Точка входа. Класс App
 ├── requirements.txt      # Зависимости
+├── LICENSE               # Лицензия на код
 └── README.md             # Документация
 ```
 
