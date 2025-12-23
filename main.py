@@ -31,8 +31,33 @@ class App(ctk.CTk):
         self._ensure_data_dir()
         configure_logging()
         
-        # Инициализация БД
-        self.db = SecureDB("data/incidents.db.enc")
+        """
+        # Локальный SQL Server
+        SQL_SERVER_CONNECTION_STRING=DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=IncidentDB;UID=sa;PWD=your_password
+
+        # SQL Server на конкретном порту
+        SQL_SERVER_CONNECTION_STRING=DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost,1433;DATABASE=IncidentDB;UID=sa;PWD=your_password
+
+        # SQL Server с Windows Authentication
+        SQL_SERVER_CONNECTION_STRING=DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=IncidentDB;Trusted_Connection=yes;
+
+        # Удалённый SQL Server
+        SQL_SERVER_CONNECTION_STRING=DRIVER={ODBC Driver 17 for SQL Server};SERVER=your-server-name.database.windows.net;DATABASE=IncidentDB;UID=your_username;PWD=your_password
+        """
+        # Подключение к SQL Server
+        # Строка подключения берётся из конфигурации или переменной окружения
+        connection_string = env_cfg.get('SQL_SERVER_CONNECTION_STRING')
+        if not connection_string:
+            error_msg = "Отсутствует строка подключения к SQL Server: SQL_SERVER_CONNECTION_STRING"
+            ctk.CTkMessagebox(
+                title="Ошибка конфигурации",
+                message=error_msg,
+                icon="cancel"
+            )
+            sys.exit(1)
+
+        # Инициализация БД с подключением к SQL Server
+        self.db = SecureDB(connection_string)
         self.db._start_auto_backup(self) # Запускаем автобэкап БД
 
         self.current_frame = None
@@ -46,7 +71,8 @@ class App(ctk.CTk):
         required_vars = [
             "DB_ENCRYPTION_KEY",
             "LOG_HMAC_KEY", 
-            "PASSWORD_HMAC_KEY"
+            "PASSWORD_HMAC_KEY",
+            "SQL_SERVER_CONNECTION_STRING"  # Добавляем обязательную переменную для SQL Server
         ]
         
         missing_vars = [var for var in required_vars if not hasattr(env_cfg, var)]
@@ -109,7 +135,7 @@ class App(ctk.CTk):
             except Exception as e:
                 logging.error(f"Ошибка логирования выхода: {e}")
 
-        # Закрываем соединение и шифруем БД
+        # Закрываем соединение с SQL Server
         self.db.close()
 
         self.destroy()
