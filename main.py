@@ -43,6 +43,15 @@ class App(ctk.CTk):
 
         # Удалённый SQL Server
         SQL_SERVER_CONNECTION_STRING=DRIVER={ODBC Driver 17 for SQL Server};SERVER=your-server-name.database.windows.net;DATABASE=IncidentDB;UID=your_username;PWD=your_password
+
+
+        # Ключи шифрования (обязательные)
+        DB_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+        LOG_HMAC_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+        PASSWORD_HMAC_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+        # Строка подключения к SQL Server (обязательная)
+        SQL_SERVER_CONNECTION_STRING=DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=IncidentDB;UID=sa;PWD=your_password
+
         """
         # Подключение к SQL Server
         # Строка подключения берётся из конфигурации или переменной окружения
