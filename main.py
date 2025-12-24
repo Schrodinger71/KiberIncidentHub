@@ -140,6 +140,5 @@ if __name__ == "__main__":
         LOG_HMAC_KEY=LKtq1dOWAOeJd6FODT7Zra1ZD-pywb8NtfKiPnhLgrM=
         PASSWORD_HMAC_KEY=X93Y5Ks1cO5eiZL-jPx4tvY0U84mApKRD8P4f5v4f4M=
         POSTGRES_CONNECTION_STRING=host=192.168.10.65 port=5432 dbname=IncidentDB user=postgres password=your_password
-        TRING=DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=IncidentDB;UID=sa;PWD=your_password
 
         """
