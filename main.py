@@ -135,24 +135,11 @@ if __name__ == "__main__":
         sys.exit(1)
 
         """
-        # Локальный SQL Server
-        SQL_SERVER_CONNECTION_STRING=DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=IncidentDB;UID=sa;PWD=your_password
-
-        # SQL Server на конкретном порту
-        SQL_SERVER_CONNECTION_STRING=DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost,1433;DATABASE=IncidentDB;UID=sa;PWD=your_password
-
-        # SQL Server с Windows Authentication
-        SQL_SERVER_CONNECTION_STRING=DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=IncidentDB;Trusted_Connection=yes;
-
-        # Удалённый SQL Server
-        SQL_SERVER_CONNECTION_STRING=DRIVER={ODBC Driver 17 for SQL Server};SERVER=your-server-name.database.windows.net;DATABASE=IncidentDB;UID=your_username;PWD=your_password
-
-
-        # Ключи шифрования (обязательные)
-        DB_ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
-        LOG_HMAC_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
-        PASSWORD_HMAC_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
-        # Строка подключения к SQL Server (обязательная)
-        SQL_SERVER_CONNECTION_STRING=DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=IncidentDB;UID=sa;PWD=your_password
+        Пример .env
+        DB_ENCRYPTION_KEY=a4F_CKss9tTFrC6HBaJ5vRSWwm9wOdWkZTMfkgNgnSc=
+        LOG_HMAC_KEY=LKtq1dOWAOeJd6FODT7Zra1ZD-pywb8NtfKiPnhLgrM=
+        PASSWORD_HMAC_KEY=X93Y5Ks1cO5eiZL-jPx4tvY0U84mApKRD8P4f5v4f4M=
+        POSTGRES_CONNECTION_STRING=host=192.168.10.65 port=5432 dbname=IncidentDB user=postgres password=your_password
+        TRING=DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=IncidentDB;UID=sa;PWD=your_password
 
         """
