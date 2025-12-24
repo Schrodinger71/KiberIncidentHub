@@ -33,9 +33,9 @@ class App(ctk.CTk):
         configure_logging()
 
         # Строка подключения к SQL Server
-        connection_string = env_cfg.SQL_SERVER_CONNECTION_STRING
+        connection_string = env_cfg.POSTGRES_CONNECTION_STRING
         if not connection_string:
-            error_msg = "Отсутствует строка подключения к SQL Server:\nSQL_SERVER_CONNECTION_STRING"
+            error_msg = "Отсутствует строка подключения к POSTGRES_CONNECTION_STRING:\nPOSTGRES_CONNECTION_STRING"
             mb.showerror("Ошибка конфигурации", error_msg)
             sys.exit(1)
 
@@ -55,7 +55,7 @@ class App(ctk.CTk):
             "DB_ENCRYPTION_KEY",
             "LOG_HMAC_KEY",
             "PASSWORD_HMAC_KEY",
-            "SQL_SERVER_CONNECTION_STRING"
+            "POSTGRES_CONNECTION_STRING"
         ]
 
         missing_vars = [var for var in required_vars if not hasattr(env_cfg, var)]

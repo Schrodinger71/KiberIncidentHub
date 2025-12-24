@@ -52,6 +52,11 @@ class ENVIRONMENT_VAR:
     def SQL_SERVER_CONNECTION_STRING(self) -> str:
         """Строка подключения к SQL Server (обязательный)"""
         return get_env_variable("SQL_SERVER_CONNECTION_STRING")
+    
+    @property
+    def POSTGRES_CONNECTION_STRING(self) -> str:
+        """Строка подключения к PostgreSQL (обязательный)"""
+        return get_env_variable("POSTGRES_CONNECTION_STRING")
 
 
 # Инициализация класса
