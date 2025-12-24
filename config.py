@@ -48,6 +48,12 @@ class ENVIRONMENT_VAR:
         key = get_env_variable("PASSWORD_HMAC_KEY")
         return key.encode()
 
+    @property
+    def SQL_SERVER_CONNECTION_STRING(self) -> str:
+        """Строка подключения к SQL Server (обязательный)"""
+        return get_env_variable("SQL_SERVER_CONNECTION_STRING")
+
+
 # Инициализация класса
 env_cfg = ENVIRONMENT_VAR()
 """Класс для доступа к переменным окружения в стиле ENVIRONMENT_VAR.KEY"""
