@@ -155,4 +155,9 @@ if __name__ == "__main__":
         # Строка подключения к SQL Server (обязательная)
         SQL_SERVER_CONNECTION_STRING=DRIVER={ODBC Driver 17 for SQL Server};SERVER=localhost;DATABASE=IncidentDB;UID=sa;PWD=your_password
 
+        
+        docker run -d --name sqlserver2022 -e "ACCEPT_EULA=Y" -e "MSSQL_SA_PASSWORD=YourStrongPassword123!" -p 1433:1433 -v sql_data:/var/opt/mssql mcr.microsoft.com/mssql/server:2022-latest
+        py -c "import pyodbc; conn=pyodbc.connect('DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost,1433;DATABASE=master;UID=sa;PWD=YourStrongPassword123!;TrustServerCertificate=yes;', autocommit=True); cursor=conn.cursor(); cursor.execute('CREATE DATABASE IncidentDB'); print('? База IncidentDB создана'); cursor.execute('SELECT name FROM sys.databases'); [print(f'   {row[0]}') for row in cursor.fetchall()]; conn.close()"
+        SQL_SERVER_CONNECTION_STRING=DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost,1433;DATABASE=IncidentDB;UID=sa;PWD=YourStrongPassword123!;TrustServerCertificate=yes;
+
         """
