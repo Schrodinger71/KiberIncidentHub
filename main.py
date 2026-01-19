@@ -160,4 +160,19 @@ if __name__ == "__main__":
         py -c "import pyodbc; conn=pyodbc.connect('DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost,1433;DATABASE=master;UID=sa;PWD=YourStrongPassword123!;TrustServerCertificate=yes;', autocommit=True); cursor=conn.cursor(); cursor.execute('CREATE DATABASE IncidentDB'); print('? База IncidentDB создана'); cursor.execute('SELECT name FROM sys.databases'); [print(f'   {row[0]}') for row in cursor.fetchall()]; conn.close()"
         SQL_SERVER_CONNECTION_STRING=DRIVER={ODBC Driver 18 for SQL Server};SERVER=localhost,1433;DATABASE=IncidentDB;UID=sa;PWD=YourStrongPassword123!;TrustServerCertificate=yes;
 
+        
+
+
+        Example:
+        DB_ENCRYPTION_KEY = FkLiSqzsNBbOAOO-eLXkhSNz6HC2vsZvshjgHiFFZAc=
+        LOG_HMAC_KEY = rJ8L352rebtmuif4mVXlnDZvkCSThmAsZ4MuPjieyx8=
+        PASSWORD_HMAC_KEY = lAw-G1IeNVwdiRzBhjJ-AMAMHEMApavdnSnaKMHd2CY=
+        SQL_SERVER_CONNECTION_STRING=DRIVER=
+                {ODBC Driver 18 for SQL Server};
+                SERVER=192.168.0.100,5443;
+                DATABASE=IncidentDB;
+                UID=incident_admin;
+                PWD=StrongPassword_123!;
+                TrustServerCertificate=yes;
+
         """
