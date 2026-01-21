@@ -84,7 +84,7 @@ class SecureDB:
                 logging.error(f"Ошибка при коммите БД: {e}")
             
             # Создаём бэкап при закрытии
-            self._create_backup("shutdown")
+            # self._create_backup("shutdown") # Отключаю для SQL Server
             
             self.conn.close()
             logging.info("Соединение с БД закрыто")

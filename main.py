@@ -41,7 +41,7 @@ class App(ctk.CTk):
 
         # Инициализация БД
         self.db = SecureDB(connection_string)
-        self.db._start_auto_backup(self)
+        # self.db._start_auto_backup(self) # Отключаю для SQL Server
 
         self.current_frame = None
 
