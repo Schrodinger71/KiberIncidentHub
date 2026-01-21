@@ -2,6 +2,7 @@ import logging
 from tkinter import ttk
 
 import customtkinter as ctk
+import tkinter.messagebox as mb
 
 
 class HistoryViewer(ctk.CTkFrame):
@@ -161,17 +162,78 @@ class HistoryViewer(ctk.CTkFrame):
         self.tree.tag_configure("oddrow", background="#333333")
         self.tree.tag_configure("evenrow", background=BG_COLOR)
 
+    def _clean_value(self, value):
+        """Очистка значения от проблемных символов для Treeview"""
+        if value is None:
+            return ""
+        
+        # Конвертируем в строку
+        text = str(value)
+        
+        # Удаляем все непечатаемые символы, кроме пробелов
+        import string
+        # Разрешенные символы: печатаемые + кириллица + спецсимволы
+        allowed_chars = set(string.printable + 'абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ')
+        text = ''.join(c for c in text if c in allowed_chars)
+        
+        # Убираем лишние пробелы
+        text = ' '.join(text.split())
+        
+        # Если строка обрамлена кавычками и содержит запятые - убираем кавычки
+        if (text.startswith('"') and text.endswith('"')) or (text.startswith("'") and text.endswith("'")):
+            # Проверяем, есть ли внутри запятые
+            inner_text = text[1:-1]
+            if ',' in inner_text:
+                text = inner_text
+        
+        # Экранируем кавычки внутри строки
+        text = text.replace('"', "'")
+        
+        # Обрезаем слишком длинные строки
+        if len(text) > 100:
+            text = text[:97] + "..."
+        
+        return text
 
-    def _start_auto_refresh(self):
-        self._load_data()
-        self.after(10000, self._start_auto_refresh)
+    def _safe_insert_log(self, log):
+        """Безопасная вставка записи лога в Treeview"""
+        try:
+            # Проверяем, что log имеет правильное количество элементов
+            if len(log) != 8:
+                # Если элементов меньше, дополняем пустыми значениями
+                log_list = list(log)
+                while len(log_list) < 8:
+                    log_list.append("")
+                log = tuple(log_list)
+            
+            # Очищаем каждое значение
+            cleaned_log = []
+            for i, value in enumerate(log):
+                cleaned_value = self._clean_value(value)
+                cleaned_log.append(cleaned_value)
+            
+            # Вставляем в таблицу
+            row_id = self.tree.insert("", "end", values=tuple(cleaned_log))
+            
+            # Чередуем цвета строк
+            row_count = len(self.tree.get_children())
+            tag = "evenrow" if row_count % 2 == 0 else "oddrow"
+            self.tree.item(row_id, tags=(tag,))
+            
+            return True
+            
+        except Exception as e:
+            logging.warning(f"Ошибка вставки записи: {e}, данные: {log}")
+            return False
 
     def _load_data(self):
         """Загрузка данных с учетом фильтров"""
         try:
+            # Получаем параметры фильтров
             table = self.table_filter.get() if self.table_filter.get() != "Все" else None
             user = self.user_filter.get() if self.user_filter.get() != "Все" else None
             
+            # Получаем логи
             logs = self.db.get_audit_logs(
                 table_filter=table,
                 user_filter=user,
@@ -179,14 +241,44 @@ class HistoryViewer(ctk.CTkFrame):
                 date_to=self.date_to.get() or None
             )
             
-            self.tree.delete(*self.tree.get_children())
-            for log in logs:
-                self.tree.insert("", "end", values=log)
+            # Очищаем таблицу
+            for item in self.tree.get_children():
+                self.tree.delete(item)
+            
+            # Счетчики
+            success_count = 0
+            error_count = 0
+            
+            # Загружаем данные
+            if logs:
+                for log in logs:
+                    if self._safe_insert_log(log):
+                        success_count += 1
+                    else:
+                        error_count += 1
+                
+                # Показываем статистику
+                if error_count > 0:
+                    self.tree.insert("", "end", values=(
+                        "", "", "", 
+                        f"Загружено: {success_count} записей", 
+                        f"Пропущено: {error_count} записей", 
+                        "", "", ""
+                    ))
+            else:
+                # Если нет данных
+                mb.showinfo("Информация", "Нет данных для отображения")
                 
         except Exception as e:
-            logging.error(f"Ошибка загрузки журнала: {e}")
-            ctk.CTkMessagebox(
-                title="Ошибка",
-                message=f"Не удалось загрузить данные журнала:\n{str(e)}",
-                icon="cancel"
-            )
+            logging.error(f"Ошибка загрузки журнала: {e}", exc_info=True)
+            mb.showerror("Ошибка", f"Не удалось загрузить данные журнала:\n{str(e)}")
+
+    def _start_auto_refresh(self):
+        """Автоматическое обновление данных"""
+        try:
+            self._load_data()
+        except Exception as e:
+            logging.error(f"Ошибка автообновления: {e}")
+        
+        # Обновляем каждые 30 секунд
+        self.after(30000, self._start_auto_refresh)
